@@ -27,3 +27,9 @@
 - 도메인 협력관계 : 기획자들도 볼 수 있는 그림. 이걸 바탕으로 개발자가 구체화해서 클래스 다이어그램을 만들어냄
 - 클래스 다이어그램 : 인터페이스와 구현체. 서버를 실행하지 않고 클래스들만 분석해서 볼 수 있는 그림
 - 객체 다이어그램 : 실제 동작시 사용하는 인스턴스끼리의 참조 관계를 설명
+
+# 4. 회원 도메인 개발
+- Tip.
+    - interface와 interfaceImpl(구현체)를 다른 패키지에 두는 것이 설계상 더 좋음.
+    - MemoryMemberRepository에서 static HashMap을 만들어 사용했는데, 실무에선 동시성 문제때문에 ConcurrentHashMap을 사용. (→ [<U>참고</U>](https://applepick.tistory.com/124) )
+    - Impl이란건 implements를 줄여 사용하는 것인데, 인터페이스의 구현체가 <U>단 하나</U>일 경우 ~Impl이라고 관례상 많이 사용한다.
