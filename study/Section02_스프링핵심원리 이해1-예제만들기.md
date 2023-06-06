@@ -35,3 +35,34 @@
     - Impl이란건 implements를 줄여 사용하는 것인데, 인터페이스의 구현체가 <U>단 하나</U>일 경우 ~Impl이라고 관례상 많이 사용한다.
 
 # 5. 회원 도메인 실행과 테스트 
+```
+public class MemberServiceTest {
+
+    MemberService memberService = new MemberServiceImpl();
+    @Test
+    void join(){
+        //given
+        Member member = new Member(1L, "memberA", Grade.VIP);
+
+        //when
+        memberService.join(member);
+        Member findMember = memberService.findMember(1L);
+
+        //then
+        Assertions.assertThat(member).isEqualTo(findMember);
+    }
+}
+```
+
+**<회원 도메인 설계의 문제점>**
+- 다른 저장소로 변경할 때 OCP원칙을 잘 준수할까? → NO
+- DIP를 잘 지키고 있나? → NO
+- 이유
+    ```
+    public class MemberServiceImpl implements MemberService{
+        private final MemberRepository memberRepository = new MemoryMemberRepository();
+    }
+    ```
+    - ServiceImpl(클라이언트 코드)에서 memberRepository(역할, 추상, 인터페이스)와 MemoryMemberRepostiory(구현, 구체화) 둘 다 의존하고 있음. → DIP위반
+    - 또한 다른 저장소로 변경시 클라이언트 코드인 ServiceImpl를 변경해주어야 함. → OCP위반
+
