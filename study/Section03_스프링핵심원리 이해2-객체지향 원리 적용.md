@@ -58,3 +58,5 @@ public class OrderServiceImpl implements OrderService{
 
 **기능추가시 변경된 의존관계**
 <img src="./image/sec03_3.png">
+
+# 3. 관심사의 분리
