@@ -60,4 +60,4 @@ public class OrderServiceImpl implements OrderService{
 <img src="./image/sec03_3.png">
 
 # 3. 관심사의 분리
-- 
+- AppConfig 등장
