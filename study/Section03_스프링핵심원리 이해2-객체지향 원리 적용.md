@@ -154,3 +154,49 @@ public class OrderServiceImpl implements OrderService{
     > Q질문. @BeforeEach안에 new AppConfig()를 하는 이유는 ?   
     저렇게 하면 테스트가 실행할때마다 새로운 AppConfig를 만들어줘야 하는데, 그래야 하는 이유가 있을까? 혹시 현재 임시 데이터베이스로 만든 HashMap을 테스트 후에 초기화해주고 재사용하기 번거로워서 테스트시마다 아예 새로 AppConfig를 만드는걸까?   
     A. 질문글남겨두기!!!!
+
+# 4. AppConfig 리팩터링
+- 리팩터링 전
+    ```
+    public class AppConfig {
+        public MemberService memberService(){
+            return new MemberServiceImpl(new MemoryMemberRepository());
+        }
+
+        public OrderService orderService(){
+            return new OrderServiceImpl(new MemoryMemberRepository(), new FixDiscountPolicy());
+        }
+    }
+    ```
+    - 중복(new MemoryMemberRepository)이 있고, 역할에 따른 구현이 잘 안 보임.
+
+- 리팩터링 후
+    ```
+    public class AppConfig {
+
+        public MemberService memberService(){
+            return new MemberServiceImpl(memberRepository());
+        }
+        
+        public OrderService orderService(){
+            return new OrderServiceImpl(memberRepository(), discountPolicy());
+        }
+        
+        public MemberRepository memberRepository(){
+            return new MemoryMemberRepository();
+        }
+    
+        public DiscountPolicy discountPolicy(){
+            return new FixDiscountPolicy();
+        }
+
+    }
+    ```
+    - 중복을 제거하고, 역할에 따른 구현이 잘 보이도록 리팩터링 완료
+    - 현재 애플리케이션에서 memberService는 memberRepository를 참조하고, OrderService는 memberRepository와 discountPolicy를 참조하는 클래스 간 관계를 한눈에 파악할 수 있음.
+    - 또한 현재 애플리케이션에서 MemberRepository와 DiscountPolicy는 각각 어떤 구현체를 사용하는지(각각 MemoryMemberRepository, FixDiscountPolicy)를 한눈에 파악할 수 있음.
+    - 메서드 명이나, 리턴 타입만 봐도 해당 메서드가 어떤 역할인지를 추측가능함. 
+
+- 정리
+    - new MemoryMemberRepository() 이 부분이 중복 제거되었다. 이제 MemoryMemberRepositoy를 다른 구현체로 변경할 때 한 부분만 변경하면 됨
+    - AppConfig를 볼면 역할과 구현 클래스가 한눈에 들어온다. 덕분에 애플리케이션 전체 구성이 어떻게 되어있는지 빠르게 파악할 수 있다.
