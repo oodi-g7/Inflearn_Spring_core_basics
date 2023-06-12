@@ -284,3 +284,88 @@ public class AppConfig {
 - 또는 어샘블러, 오브젝트 팩토리 등으로 불리기도..
 
 # 9. 스프링으로 전환하기
+## AppConfig 변경
+```
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImpl(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new RateDiscountPolicy();
+    }
+}
+```
+- @Configuration : 애플리케이션의 설정, 구성정보를 담당하는 클래스에 해당 어노테이션 사용
+- @Bean : 구성요소들에다가 해당 어노테이션을 붙여서 전부 스프링 컨테이너에 등록시키기
+
+## MemberApp 변경
+### 기존코드
+```
+public class MemberApp {
+    public static void main(String[] args) {
+        AppConfig appConfig = new AppConfig();
+        MemberService memberService = appConfig.memberService();
+
+        Member member = new Member(1L, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        Member findMember = memberService.findMember(1L);
+        System.out.println("new member = " + member.getName());
+        System.out.println("find member = " + findMember.getName());
+    }
+}
+
+```
+
+### 변경된 코드
+```
+public class MemberApp {
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        MemberService memberService = applicationContext.getBean("memberService", MemberService.class);
+
+        Member member = new Member(1L, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        Member findMember = memberService.findMember(1L);
+        System.out.println("new member = " + member.getName());
+        System.out.println("find member = " + findMember.getName());
+    }
+}
+```
+- > ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+    - 스프링은 모든 것이 ApplicationContext에서 시작한다. (컨테이너에 등록된 모든 객체들을 관리헤줌)
+    - ApplicationContext를 스프링 컨테이너라고 보면 된다.
+    - AppConfig는 어노테이션을 기반으로 Config를 하고 있으므로, AnnotationConfigApplicationContext를 new 해준다. 그리고 파라미터 값으로 AppConfig를 넣어준다.
+    - 이제 AppConfig에 있는 환경설정 정보들을 스프링 컨테이너에 등록시키고, 등록된 객체들을 스프링이 관리해줄 것 이다.
+
+- > MemberService memberService = applicationContext.getBean("memberService", MemberService.class);
+    - 이전 코드를 보면,   
+    > AppConfig appConfig = new AppConfig();   
+    > MemberService memberService = appConfig.memberService();
+    - 이렇게 new AppConfig를 통해 직접 찾아왔다. 이제는 스프링 컨테이너를 통해서 찾아와야한다.
+    - .getBean()을 통해 필요한 객체를 찾아오면 되는데, 사용법은 .getBean([이름], [타입])이다.
+    - @Bean을 붙여 스프링 컨테이너에 저장할때 해당 메소드의 <U>**이름**</U>을 키 값으로 저장하기 때문에 getBean()의 파라미터 값으로 이름과 반환타입을 넣는다.
+
+- 코드를 실행해보면 appConfig와 더불어 appConfig내에 @Bean어노테이션을 붙여 뒀던 메소드들(memberService, memberRepository, orderService, discountPolicy)이 빈으로 생성되었다는 로그를 확인할 수 있다.
+    <img src="./image/sec03_9.png">
+
+## 정리
+- ApplicationContext를 스프링 컨테이너라고 한다.
+- 기존에는 개발자가 AppConfig를 사용해서 직접 객체를 생성하고 DI를 했지만, 이제부터는 스프링 컨테이너를 통해서 사용한다.
+- 스프링 컨테이너는 @Configuration이 붙은 AppConfig를 설정(구성) 정보로 사용한다. 여기서 @Bean이라 적힌 메서드를 모두 호출해서 반환된 객체를 스프링 컨테이너에 등록한다. 이렇게 스프링 컨테이너에 등록된 객체를 스프링 빈이라고 한다.
+- 스프링 빈은 @Bean이 붙은 메서드의 명을 스프링 빈의 이름으로 사용한다.(memberService, orderService 등)
+- 이전에는 개발자가 필요한 객체를 AppConfig를 사용해서 직접 조회했지만(ex. new AppConfig();), 이제부터는 스프링 컨테이너를 통해서 필요한 스프링 빈(객체)을 찾아야 한다. 스프링 빈은 applicationContext.getBean() 메서드를 사용해서 찾을 수 있다.
+- 기존에는 개발자가 직접 자바코드로 모든 것을 했다면 이제부터는 스프링 컨테이너에 객체를 스프링 빈으로 등록하고, 스프링 컨테이너에서 스프링 빈을 찾아서 사용하도록 변경되었다.
