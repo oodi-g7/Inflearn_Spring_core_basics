@@ -9,21 +9,25 @@ import hello.core.member.MemberServiceImpl;
 import hello.core.member.MemoryMemberRepository;
 import hello.core.order.OrderService;
 import hello.core.order.OrderServiceImpl;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration // 애플리케이션의 설정,구성정보를 담당하는 곳에 어노테이션 표시
 public class AppConfig {
 
+    @Bean // 구성요소들에다 @Bean을 붙여서 전부 스프링 컨테이너에 등록시키기
     public MemberService memberService(){
         return new MemberServiceImpl(memberRepository());
     }
-
+    @Bean
     public OrderService orderService(){
         return new OrderServiceImpl(memberRepository(), discountPolicy());
     }
-
+    @Bean
     public MemberRepository memberRepository(){
         return new MemoryMemberRepository();
     }
-
+    @Bean
     public DiscountPolicy discountPolicy(){
 //        return new FixDiscountPolicy();
         return new RateDiscountPolicy();
