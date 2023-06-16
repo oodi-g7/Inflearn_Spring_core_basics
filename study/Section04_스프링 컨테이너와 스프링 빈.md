@@ -73,8 +73,99 @@ public class ApplicationContextInfoTest {
         - ROLE_INFRASTRUCTURE : 스프링이 내부에서 사용하는 빈
 
 # 3. 스프링 빈 조회 : 기본
+## (1) 빈 이름으로 조회하기
+```
+public class ApplicationContextBasicFindTest {
 
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+    
+    @Test
+    @DisplayName("빈 이름으로 조회")
+    void findBeanByName(){
+        // MemberService.class처럼 인터페이스를 조회하면 해당 인터페이스의 구현체를 대상으로 조회
+        MemberService memberService = ac.getBean("memberService", MemberService.class);
+        
+        // 검증은 Assertions로 하면 됨
+        assertThat(memberService).isInstanceOf(MemberServiceImpl.class);
+    }
+}
+```
+- 앞서 AppConfig에서 memberService()메소드를 @Bean을 이용해 빈으로 등록해두었다.
+- 컨테이너에 해당 빈이 등록되어있는지 조회하기 위해선 getBean을 이용해서 메소드 이름과 반환타입을 함께 적어준다.
+- 현재 getBean()내에 반환타입 파라미터 값은 MemberService.class 로, 인터페이스이다. <U>**인터페이스를 반환타입으로 적게 되면, 테스트 실행시 해당 인터페이스의 구현체를 대상으로 조회한다.**</U>
 
+## (2) 이름 없이 타입으로만 조회
+```
+public class ApplicationContextBasicFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+    
+    @Test
+    @DisplayName("이름 없이 타입으로만 조회")
+    void findBeanByType(){
+        MemberService memberService = ac.getBean(MemberService.class);
+
+        // 검증은 Assertions로 하면 됨
+        assertThat(memberService).isInstanceOf(MemberServiceImpl.class);
+    }
+}
+```
+- 스프링 컨테이너에서 스프링 빈을 찾는 가장 기본적인 조회방법으로는 아래와 같이 두가지가 있다.
+    - ac.getBean(빈이름, 타입)
+    - ac.getBean(타입)
+- 이렇게 타입만으로도 빈 조회가 가능하다. 단, 컨테이너에 동일한 타입의 빈이 여러개 등록되어있을때 문제가 발생한다. 그것은 다음 챕터에서 공부!
+
+## (3) 구체적인 타입으로 조회
+- 현재까지 getBean() 파라미터에 반환타입을 MemberService.class 인터페이스로 작성했다.
+- 이전에 타입으로만 빈 조회가 가능한 것을 배웠으니, MemberService의 구현체인 MemberServiceImpl을 이용하여 빈 조회를 해본다.
+```
+public class ApplicationContextBasicFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+    
+    @Test
+    @DisplayName("구체 타입으로 조회")
+    void findBeanBy2(){
+        MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
+
+        // 검증은 Assertions로
+        assertThat(memberService).isInstanceOf(MemberServiceImpl.class);
+    }
+}
+```
+> MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
+- 스프링은 컨테이너에 빈을 생성할때 메소드의 이름과 반환타입을 컨테이너에 저장하는데,
+- 앞서 작성해둔 AppConfig에 memberService()를 보면 메소드 이름은 memberService이고, 반환타입은 MemberServiceImpl이므로 MemberServiceImpl이 스프링 컨테이너에 빈으로 등록되어 있음을 알 수 있다.
+- 이렇게 빈에 등록되어있는 객체라면 그것이 구현체일지라도 해당 구현체를 이용해서 빈을 검색할 수 있다.
+- **하지만 이것은 좋은 방법은 아니다.(역할과 구현 구분, 역할에 의존하기! 하지만 해당 방식은 구현에 의존하게 됨)** 이런 이유로 해당 구현체의 상위 타입인 인터페이스(MemberService.class)를 사용해왔던 것!
+- 이러한 방식은 <U>**컨테이너에 등록된 객체라면 빈 조회에 이용할 수 있다는 점만 알아두고**</U> 혹시나 필요한 경우가 생겼을때만 사용하기! 
+
+## (4) 실패 테스트, 없는 빈이름으로 조회하기
+- 우선, 존재하지 않는 빈을 조회하면 어떻게 될까?
+```
+public class ApplicationContextBasicFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    MemberService xxxxx = ac.getBean("xxxxx", MemberService.class);
+}
+```
+- 테스트를 실행하면 존재하지 않는 빈을 조회했으므로 테스트 자체가 실패됨.
+- NoSuchBeanDefinitionException 발생
+<img src="./image/sec04_4.png">
+
+- 그럼 테스트가 실패하지 않도록 테스트 로직으로 검증하는 법을 알아보자
+- 이 테스트에선 예외가 터져야 테스트 성공, 그렇지 않으면 테스트 실패!
+```
+public class ApplicationContextBasicFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    assertThrows(NoSuchBeanDefinitionException.class, // (2) 해당 예외가 터져야 한다.
+                () -> ac.getBean("xxxxx", MemberService.class)); // (1) 이 람다식을 실행하면
+}
+```
+- 어떤 예외가 발생하는지를 테스트하기 위해선 위와 같은 코드를 사용하면 된다.
 # 4. 스프링 빈 조회 : 동일한 타입이 둘 이상
 
 # 5. 스프링 빈 조회 : 상속 관계
