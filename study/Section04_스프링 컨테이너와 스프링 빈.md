@@ -166,7 +166,95 @@ public class ApplicationContextBasicFindTest {
 }
 ```
 - 어떤 예외가 발생하는지를 테스트하기 위해선 위와 같은 코드를 사용하면 된다.
+
 # 4. 스프링 빈 조회 : 동일한 타입이 둘 이상
+- 타입으로 조회 시 같은 타입의 스프링 빈이 둘 이상이면 오류가 발생한다. 이때는 빈 이름을 함께 지정해줘야한다.
+- 우선 현재 AppConfig에는 중복되는 동일한 타입의 메서드가 없으므로, 테스트를 위한 임시클래스 하나를 생성한다.
+    - 임시클래스 생성후 AnnotationConfigApplicationContext를 생성할때, 임시로 생성한 클래스명을 파라미터 정보로 입력해줘야 한다.
+```
+public class ApplicationContextSameBeanFindTest {
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
+
+    @Configuration
+    static class SameBeanConfig{
+        @Bean
+        public MemberRepository memberRepostiory1(){
+            return new MemoryMemberRepository();
+        }
+
+        @Bean
+        public MemberRepository memberRepository2(){
+            return new MemoryMemberRepository();
+        }
+    }
+}
+```
+
+## (1) 타입으로 조회 시 같은 타입이 둘 이상 있으면, 중복오류 발생
+```
+public class ApplicationContextSameBeanFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
+
+    @Test
+    @DisplayName("타입으로 조회시 같은 타입이 둘 이상 있으면, 중복 오류가 발생한다.")
+    void findBeanByTypeDuplicate(){
+        MemberRepository bean = ac.getBean(MemberRepository.class);
+    }
+}
+```
+- 에러발생
+> org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'hello.core.member.MemberRepository' available: expected single matching bean but found 2: memberRepository1,memberRepository2
+- 코드수정
+    - 검증할 내용 : ac.getBean(MemberRepository.class) 을 조회하면, NoUniqueBeanDefinitionException 이 발생할 것이다. 
+```
+public class ApplicationContextSameBeanFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
+
+    @Test
+    @DisplayName("타입으로 조회시 같은 타입이 둘 이상 있으면, 중복 오류가 발생한다.")
+    void findBeanByTypeDuplicate(){
+        Assertions.assertThrows(NoUniqueBeanDefinitionException.class,
+                    () -> ac.getBean(MemberRepository.class));
+    }
+}
+```
+
+## (2) 타입으로 조회 시 같은 타입이 둘 이상 있으면, 빈 이름을 지정하면 된다.
+```
+public class ApplicationContextSameBeanFindTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
+
+    @Test
+    @DisplayName("타입으로 조회시 같은 타입이 둘 이상 있으면, 빈 이름을 지정하면 된다.")
+    void findBeanByName(){
+        MemberRepository memberRepository = ac.getBean("memberRepository1", MemberRepository.class);
+        assertThat(memberRepository).isInstanceOf(MemberRepository.class);
+    }
+}
+```
+- memberRepository1 이라는 구체적인 빈 이름을 지정해주면 에러가 발생하지 않는다.
+
+## (3) 특정 타입의 모든 빈을 조회하기
+- ac.getBeansOfType()을 사용하면 해당 타입의 모든 빈을 조회할 수 있다.
+```
+public class ApplicationContextSameBeanFindTest {
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
+
+    @Test
+    @DisplayName("특정 타입의 모든 빈 조회하기")
+    void findAllBeanByType(){
+        Map<String, MemberRepository> beansOfType = ac.getBeansOfType(MemberRepository.class);
+        for (String key : beansOfType.keySet()) {
+            System.out.println("key = " + key + " | value = " + beansOfType.get(key));
+        }
+        System.out.println("beansOfType = " + beansOfType);
+        org.assertj.core.api.Assertions.assertThat(beansOfType.size()).isEqualTo(2);
+    }
+}
+```
 
 # 5. 스프링 빈 조회 : 상속 관계
 
