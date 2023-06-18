@@ -171,6 +171,7 @@ public class ApplicationContextBasicFindTest {
 - 타입으로 조회 시 같은 타입의 스프링 빈이 둘 이상이면 오류가 발생한다. 이때는 빈 이름을 함께 지정해줘야한다.
 - 우선 현재 AppConfig에는 중복되는 동일한 타입의 메서드가 없으므로, 테스트를 위한 임시클래스 하나를 생성한다.
     - 임시클래스 생성후 AnnotationConfigApplicationContext를 생성할때, 임시로 생성한 클래스명을 파라미터 정보로 입력해줘야 한다.
+    - <U>**class 안에 class를 쓸 경우에는 static키워드로 해당 클래스에서만 사용할 클래스임을 명시하기!**</U>
 ```
 public class ApplicationContextSameBeanFindTest {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
@@ -257,6 +258,75 @@ public class ApplicationContextSameBeanFindTest {
 ```
 
 # 5. 스프링 빈 조회 : 상속 관계
+- 부모타입으로 조회하면, 자식 타입도 함께 조회된다.
+- 그래서 모든 자바 객체의 최고 부모인 Object타입으로 조회하면, 모든 스프링 빈을 조회한다.
+<img src="./image/sec04_5.png">
+
+    ```
+    public class ApplicationContextExtendsFindTest {
+
+        AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+
+        @Test
+        @DisplayName("부모 타입으로 조회시 자식이 둘 이상 있으면, 중복오류가 발생한다.")
+        void findBeanByParentTypeDuplicate(){
+    //        DiscountPolicy bean = ac.getBean(DiscountPolicy.class);
+            assertThrows(NoUniqueBeanDefinitionException.class,
+                    () -> ac.getBean(DiscountPolicy.class));
+        }
+        @Test
+        @DisplayName("부모 타입으로 조회시 자식이 둘 이상 있으면, 빈 이름으로 지정하면 된다.")
+        void findBeanByParentTypeBeanName(){
+            DiscountPolicy rateDiscountPolicy = ac.getBean("rateDiscountPolicy", DiscountPolicy.class);
+            assertThat(rateDiscountPolicy).isInstanceOf(RateDiscountPolicy.class);
+        }
+        
+        @Test
+        @DisplayName("특정 하위 타입으로 조회 물론 안좋은 방법 ㅎ")
+        void findBeanBySubType(){
+            RateDiscountPolicy bean = ac.getBean(RateDiscountPolicy.class);
+            assertThat(bean).isInstanceOf(RateDiscountPolicy.class);
+        }
+
+        // 실제 현업에서는 println등으로 출력하는 일이 매우 드물다.
+        // 테스트 통과/실패를 시스템이 결정하도록 해야하기에 눈으로 보고 확인할 수 없기 때문.
+        // 테스트가 통과하는지 아닌지만 확인하면 되고 출력문은 별 필요가 없음.
+        @Test
+        @DisplayName("부모 타입으로 모두 조회하기")
+        void findAllBeanByParentType(){
+            Map<String, DiscountPolicy> beansOfType = ac.getBeansOfType(DiscountPolicy.class);
+            assertThat(beansOfType.size()).isEqualTo(2);
+            for (String key : beansOfType.keySet()) {
+                System.out.println("key = " + key + " | value = " + beansOfType.get(key));
+            }
+        }
+
+        // 스프링 내부적으로 쓰이는 빈까지 모두 출력
+        // 자바객체는 모두 Object타입이기 때문
+        @Test
+        @DisplayName("부모 타입으로 모두 조회하기 - Object")
+        void findAllBeanByObjectType(){
+            Map<String, Object> beansOfType = ac.getBeansOfType(Object.class);
+            for (String key : beansOfType.keySet()) {
+                System.out.println("key = " + key + " | value = " + beansOfType.get(key));
+            }
+        }
+
+        @Configuration
+        static class TestConfig{
+            @Bean
+            public DiscountPolicy rateDiscountPolicy(){
+                return new RateDiscountPolicy();
+            }
+
+            @Bean
+            public DiscountPolicy fixDiscountPolicy(){
+                return new FixDiscountPolicy();
+            }
+        }
+    }
+
+    ```
 
 # 6. BeanFactory와 ApplicationContext
 
