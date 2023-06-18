@@ -329,6 +329,33 @@ public class ApplicationContextSameBeanFindTest {
     ```
 
 # 6. BeanFactory와 ApplicationContext
+<img src="./image/sec04_6.png">
+
+## (1) BeanFactory
+- 스프링 컨테이너의 최상위 인터페이스
+- 스프링 빈을 관리하고 조회하는 역할 담당 (ex) getBean()
+- 지금까지 사용한 대부분의 기능은 BeanFactory가 제공하는 기능
+
+## (2) ApplicationContext
+- BeanFactory 기능을 모두 상속받아서 제공
+- 빈을 관리하고 검색하는 기능을 BeanFactory가 제공해주는데 그렇다면 둘의 차이는 ? 
+    - 애플리케이션 개발에는 빈을 관리하고 조회하는 기능은 물론이고, 수 많은 부가기능이 필요함.
+    <img src="./image/sec04_7.png">
+    - 메시지 소스를 활용한 국제화 기능
+        - (ex) 한국에서 들어가면 한국어로, 영어권에서 들어가면 영어로 출력되는 웹사이트 → 국제화 기능
+        - 파일별로 제공언어 관리
+    - 환경변수
+        - 개발할때 환경 3가지 : 로컬, 테스트서버 개발환경, 실제 프로덕션에 나가는 운영환경
+        - 각 환경별로 어떤 데이터베이스를 이용해야할지.. 등 환경변수와 관련된 정보를 처리해주는 기능
+    - 애플리케이션 이벤트
+        - 이벤트를 발행하고 구독하는 모델을 편리하게 지원
+    - 편리한 리소스 조회
+        - 파일, 클래스패스, 외부 URL 등에서 리소스를 조회하여 내부에서 사용할때, 이것을 추상화하여 편리하게 사용할 수 있도록 지원
+> [정리]   
+1. ApplicationContext는 BeanFactory의 기능을 상속받는다.   
+2. ApplicationContext는 빈 관리기능 + 편리한 부가 기능을 제공한다.  
+3. BeanFactory를 직접 사용할 일은 거의 없다. 부가기능이 포함된 ApplicationContext를 사용한다.
+4. BeanFactory나 ApplicationContext를 스프링 컨테이너라고 한다.
 
 # 7. 다양한 설정 형식 지원 : 자바코드, XML
 
