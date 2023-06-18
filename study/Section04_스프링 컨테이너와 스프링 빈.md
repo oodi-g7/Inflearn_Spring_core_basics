@@ -91,7 +91,7 @@ public class ApplicationContextBasicFindTest {
 }
 ```
 - 앞서 AppConfig에서 memberService()메소드를 @Bean을 이용해 빈으로 등록해두었다.
-- 컨테이너에 해당 빈이 등록되어있는지 조회하기 위해선 getBean을 이용해서 메소드 이름과 반환타입을 함께 적어준다.
+- 컨테이너에 해당 빈이 등록되어있는지 조회하기 위해선 getBean()을 이용해서 메소드 이름과 반환타입을 함께 적어준다.
 - 현재 getBean()내에 반환타입 파라미터 값은 MemberService.class 로, 인터페이스이다. <U>**인터페이스를 반환타입으로 적게 되면, 테스트 실행시 해당 인터페이스의 구현체를 대상으로 조회한다.**</U>
 
 ## (2) 이름 없이 타입으로만 조회
@@ -112,7 +112,7 @@ public class ApplicationContextBasicFindTest {
 ```
 - 스프링 컨테이너에서 스프링 빈을 찾는 가장 기본적인 조회방법으로는 아래와 같이 두가지가 있다.
     - ac.getBean(빈이름, 타입)
-    - ac.getBean(타입)
+    - <U>ac.getBean(타입)</U>
 - 이렇게 타입만으로도 빈 조회가 가능하다. 단, 컨테이너에 동일한 타입의 빈이 여러개 등록되어있을때 문제가 발생한다. 그것은 다음 챕터에서 공부!
 
 ## (3) 구체적인 타입으로 조회
