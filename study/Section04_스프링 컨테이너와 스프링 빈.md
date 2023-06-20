@@ -436,5 +436,75 @@ public class XmlAppContext {
 - appConfig.xml을 설정정보로 사용하면서 appConfig.xml에 설정한 빈들이 등록되는 것을 확인할 수 있다.
 <img src="./image/sec04_9.png">
 
+## 결론
+- 스프링이 얼마나 유연하고 다양하게 설정 형식을 지원하는지를 알기 위한 학습이었음.
+- [참고] https://spring.io/projects/spring-framework
+
 
 # 8. 스프링 빈 설정 메타 정보 : BeanDefinition
+- 스프링이 다양한 설정 형식을 지원할 수 있는 이유 : BeanDefinition이라는 추상화
+- 쉽게 이야기해서 역할과 구현을 개념적으로 나눈 것
+    - XML을 읽어서 BeanDefinition을 만들면 된다!
+    - 자바 코드를 읽어서 BeanDefinition을 만들면 된다!
+    - 스프링 컨테이너는 자바 코드인지, XML인지 몰라도 됨. 오직 BeanDefinition만 알면 됨.
+    - 스프링 컨테이너는 BeanDefinition(인터페이스)에만 의존한다. BeanDefinition이 class로 설정된 정보인지, xml로 설정된 정보인지는 알지 못한다. => 스프링 컨테이너는 추상화에만 의존하도록 설계되어 있다.
+- BeanDefinition을 빈 설정 메타정보라고 한다.
+    - @Bean, < bean > 당 각각 하나씩 메타정보가 생성된다.
+- 스프링 컨테이너는 이 메타정보를 기반으로 스프링 빈을 생성한다.
+<img src="./image/sec04_10.png">
+<img src="./image/sec04_11.png">
+
+- AnnotationConfigApplicationContext는 AnnotatedBeanDefinitionReader를 사용해서 AppConfig.class를 읽고 BeanDefinition을 생성한다.
+- GenericXmlApplicationContext는 XmlBeanDefinitionReader를 사용해서 appConfig.xml 설정 정보를 읽고 BeanDefinition을 생성한다.
+- 새로운 형식의 설정 정보가 추가되면, XxxBeanDefinitionReader를 만들어서 BeanDefinition을 생성하면 된다.
+
+## BeanDefinition 살펴보기
+```
+public class BeanDefinitionTest {
+
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+//    GenericXmlApplicationContext ac = new GenericXmlApplicationContext("appConfig.xml");
+    @Test
+    @DisplayName("빈 설정 메타정보 확인")
+    void findApplicationBean(){
+        String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+        for (String beanDefinitionName : beanDefinitionNames) {
+            BeanDefinition beanDefinition = ac.getBeanDefinition(beanDefinitionName);
+
+            if(beanDefinition.getRole() == BeanDefinition.ROLE_APPLICATION){
+                System.out.println("beanDefinition = " + beanDefinitionName
+                        + " | beanDefinition = " + beanDefinition);
+            }
+        }
+    }
+}
+```
+- AppConfig.class 사용
+    > beanDefinition = memberService | beanDefinition = Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=appConfig; factoryMethodName=memberService; initMethodName=null; destroyMethodName=(inferred); defined in hello.core.AppConfig
+
+- appConfig.xml 사용
+    > beanDefinition = memberService | beanDefinition = Generic bean: class [hello.core.member.MemberServiceImpl]; scope=; abstract=false; lazyInit=false; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in class path resource [appConfig.xml]
+
+- BeanDefinition 정보
+    - BeanClassName 
+        - 생성할 빈의 클래스 명
+        - 자바설정(AppConfig.class)처럼 팩토리 역할의 빈을 사용하면 null로 표시됨
+        - 예 ) <U>**beanDefinition = Root bean: class [null];**</U>
+    - factoryBeanName
+        - 팩토리 역할의 빈을 사용할 경우 이름
+        - **팩토리**역할의 빈이므로 appConfig.xml을 사용한 BeanDefinition 내용을 보면 factoryBeanName값이 null임
+        - 예 ) appConfig
+    - factoryMethodName
+        - 빈을 생성할 팩토리 메서드 지정
+        - 예 ) memberService
+    - Scope
+        - 싱글톤(기본값)
+    - IazyInit
+        - 스프링 컨테이너를 생성할 때 빈을 생성하는 것이 아니라, 실제 빈을 사용할때까지 최대한 생성을 지연처리 하는지 여부
+    - InitMethodName
+        - 빈을 생성하고, 의존관계를 적용한 뒤에 호출되는 초기화 메서드 명
+    - DestroyMethodName
+        - 빈의 생명주기가 끝나서 제거하기 직전에 호출되는 메서드 명
+    - Constructor arguments, Properties
+        - 의존관계 주입에서 사용
+        - 자바설정(AppConfig.class)처럼 팩토리 역할의 빈을 사용하면 없음.
