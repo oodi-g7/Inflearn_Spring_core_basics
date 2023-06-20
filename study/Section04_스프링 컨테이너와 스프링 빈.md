@@ -358,5 +358,83 @@ public class ApplicationContextSameBeanFindTest {
 4. BeanFactory나 ApplicationContext를 스프링 컨테이너라고 한다.
 
 # 7. 다양한 설정 형식 지원 : 자바코드, XML
+## 스프링의 다양한 설정 방식
+- 스프링 컨테이너는 다양한 형식의 설정 정보를 받아드릴 수 있게 유연하게 설계되어 있음.
+<img src="./image/sec04_8.png">
+
+- **1. AnnotationConfig AplicationContext**
+    - 지금까지 사용한 방식
+    - new AnnotationConfigApplicationContext(AppConfig.class)
+    - AnnotationConfigApplicationContext 클래스를 사용하면서 자바 코드로 된 설정정보를 넘기면 됨.
+- **2. GenericXml ApplicationContext**
+    - 스프링 부트의 등장으로 잘 사용하지 않는 방식
+    - 자바코드가 아니라 xml문서를 설정정보로 사용함
+    - 아직 많은 레거시 프로젝트들이 xml로 되어있고, 또 xml을 사용하면 빈 설정 정보를 컴파일 없이 변경할 수 있다는 장점도 있으므로 한번은 배워보기
+    - GenericXmlApplicationContext를 사용하며 xml설정파일을 넘기면 됨.
+- **3. Xxx ApplicationContext**
+    - 임의로 직접 구현한 내용을 설정정보로 사용
+
+## XML 설정사용
+> src/main/resources/appConfig.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+        <bean id="memberService" class="hello.core.member.MemberServiceImpl">
+            <constructor-arg name="memberRepository" ref="memberRepository" />
+        </bean>
+
+        <bean id="memberRepository" class="hello.core.member.MemoryMemberRepository"></bean>
+
+        <bean id="orderService" class="hello.core.order.OrderServiceImpl">
+            <constructor-arg name="memberRepository" ref="memberRepository"/>
+            <constructor-arg name="discountPolicy" ref="discountPolicy"/>
+        </bean>
+
+        <bean id="discountPolicy" class="hello.core.discount.RateDiscountPolicy"></bean>
+</beans>
+```
+> AppConfig와 비교하면 동일한 내용임을 알 수 있음
+```
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImpl(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new RateDiscountPolicy();
+    }
+}
+```
+
+## 테스트
+```
+public class XmlAppContext {
+
+    @Test
+    void xmlAppContext(){
+        ApplicationContext ac = new GenericXmlApplicationContext("appConfig.xml");
+        MemberService memberService = ac.getBean("memberService", MemberService.class);
+        Assertions.assertThat(memberService).isInstanceOf(MemberService.class);
+    }
+}
+```
+- 테스트 결과는 성공
+- appConfig.xml을 설정정보로 사용하면서 appConfig.xml에 설정한 빈들이 등록되는 것을 확인할 수 있다.
+<img src="./image/sec04_9.png">
+
 
 # 8. 스프링 빈 설정 메타 정보 : BeanDefinition
