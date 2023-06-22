@@ -232,6 +232,99 @@ public class SingletonTest {
 - 스프링의 기본 빈 등록 방식은 싱글톤이지만, 싱글톤 방식만 지원하는 것은 아니다. 요청할 때마다 새로운 객체를 생성해서 반환하는 기능도 제공함. (자세한 내용은 빈 스코프에서)
 
 # 4. 싱글톤 방식의 주의점
+- 싱글톤 패턴을 사용하든, 스프링 컨테이너를 사용하든 간에, 객체 인스턴스를 하나만 생성해서 공유하는 싱글톤 방식은 여러 클라이언트가 하나의 같은 객체 인스턴스를 공유하기 때문에 싱글톤 객체는 상태를 유지(stateful)하게 설계하면 안된다!
+- 무상태(stateless)로 설계해야 한다!
+    - 특정 클라이언트에 의존적인 필드가 있으면 안된다
+    - 특정 클라이언트가 값을 변경할 수 있는 필드가 있으면 안된다
+    - 가급적 읽기만 가능해야 한다 (= 가급적 값을 수정하면 안됨)
+    - 필드 대신에 자바에서 공유되지 않는 <U>**지역변수, 파라미터, ThreadLocal**</U>등을 사용해야 한다
+- 싱글톤 방식 한정, 스프링 빈의 필드에 공유 값을 설정하면 정말 큰 장애가 발생할 수 있다
+
+## 상태를 유지할 경우 발생하는 문제점 예시
+```
+public class StatefulService {
+    
+    private int price; // 상태를 유지하는 필드
+
+    public void order(String name, int price){
+        System.out.println("name = " + name + " price = " + price);
+        this.price = price; // 여기가 문제!
+    }
+
+    public int getPrice(){
+        return price;
+    }
+}
+```
+
+```
+class StatefulServiceTest {
+
+    @Test
+    void statefulServiceSingleton(){
+        AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+        StatefulService statefulService1 = ac.getBean(StatefulService.class);
+        StatefulService statefulService2 = ac.getBean(StatefulService.class);
+
+        //ThreadA : A사용자 10000원 주문
+        statefulService1.order("userA", 10000);
+        //ThreadB : B사용자 20000원 주문
+        statefulService2.order("userB", 20000);
+        
+        //ThreadA : A사용자 주문 금액 조회
+        int price = statefulService1.getPrice();
+        System.out.println("price = " + price);
+
+        //검증코드
+        Assertions.assertThat(statefulService1.getPrice()).isEqualTo(20000);
+    }
+
+    // 테스트용 설정클래스 만들기
+    static class TestConfig {
+        @Bean
+        public StatefulService statefulService(){
+            return new StatefulService();
+        }
+    }
+}
+```
+- ThreadA가 사용자A코드를 호출하고, ThreadB가 사용자B코드를 호출한다고 가정.
+    - 위 코드는 실제 쓰레드를 사용한 것이 아님(단순설명을 위한 간단한 예제코드)
+- A사용자의 주문금액은 10000원인데도 불구하고, 결과는 20000원이 출력된다.
+    - 그 이유는 statefulService1과 statefulService2가 동일한 객체를 참조하고 있기 때문에, StatefulService의 price필드 값이 10000원에서 20000원으로 변경되었기 때문!
+    - 즉, StatefulService의 price필드는 공유되는 필드인데 특정 클라이언트가 값을 변경할 수 있으므로 문제가 발생!
+- 공유필드는 정말 조심해야 함..
+
+## 해결방법
+- 필드 대신에 자바에서 공유되지 않는 <U>**지역변수, 파라미터, ThreadLocal**</U>등을 사용해야 한다
+- 그 중 지역변수를 이용
+```
+public class StatefulService {
+
+    public int order(String name, int price){
+        System.out.println("name = " + name + " price = " + price);
+        return price;
+    }
+}
+```
+- 우선 필드를 제거해주고, 주문 메소드가 실행될때 반환값으로 주문금액을 돌려준다.
+```
+@Test
+void statefulServiceSingleton(){
+    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+    StatefulService statefulService1 = ac.getBean(StatefulService.class);
+    StatefulService statefulService2 = ac.getBean(StatefulService.class);
+
+    //ThreadA : A사용자 10000원 주문
+    int userAPrice = statefulService1.order("userA", 10000);
+    //ThreadB : B사용자 20000원 주문
+    int userBPrice = statefulService2.order("userB", 20000);
+
+    //ThreadA : A사용자 주문 금액 조회
+    System.out.println("price = " + userAPrice);
+}
+```
+- 반환되는 주문금액을 각각 userAPrice, userBPrice라는 <U>**지역변수**</U>에 담아두면, 동일한 객체 인스턴스를 사용하지만 서로 공유되지 않는 지역변수를 이용하기 때문에 문제가 발생하지 않음
 
 # 5. @Configuration과 싱글톤
 
