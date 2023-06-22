@@ -106,6 +106,18 @@ public class SingletonService {
 @Test
     @DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
     void singletoneServiceTest(){
+        new SingletonService(); // -> 컴파일오류발생 : private access
+    }
+```
+<img src="./image/sec05_3.png">
+
+- private으로 new키워드가 막힌것을 확인할 수 있음. → 컴파일오류발생
+    - 가장 좋은 오류는 컴파일 오류! 컴파일 오류만으로 대부분의 오류가 다 잡히도록 설계하는 것이 잘 설계했다는 증거가 되기도 !
+
+```
+@Test
+    @DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
+    void singletoneServiceTest(){
         // new SingletonService(); -> 컴파일오류발생 : private access
 
         // 호출할때마다 새로운 객체 생성?
@@ -124,16 +136,14 @@ public class SingletonService {
         assertThat(singletonService1).isSameAs(singletonService2);
     }
 ```
-<img src="./image/sec05_3.png">
+<img src="./image/sec05_4.png">
 
-- private으로 new키워드가 막힌것을 확인할 수 있음. → 컴파일오류발생
-    - 가장 좋은 오류는 컴파일 오류! 컴파일 오류만으로 대부분의 오류가 다 잡히도록 설계하는 것이 잘 설계했다는 증거가 되기도 !
 - 호출할때마다 같은 객체 인스턴스를 반환하는 것 또한 확인가능.
 
 ## 싱글톤패턴 문제점
 - 싱글톤 패턴을 적용하면 고객의 요청이 올 때마다 객체를 생성하는 것이 아니라, 이미 만들어진 객체를 공유해서 효율적으로 사용할 수 있다. 하지만 싱글톤 패턴은 다음과 같은 문제점을 가지고 있다.
     - 싱글톤 패턴을 구현하는 코드 자체가 많이 들어감
-    - 의존관계상 클라이언트가 구체 클래스에 의존한다. (ex)구체클래스.getInstance()
+    - 의존관계상 클라이언트가 구체 클래스에 의존한다. (ex) 구체클래스.getInstance()
     - 클라이언트가 구체 클래스에 의존해서 OCP원칙을 위반할 가능성이 높다.
     - 테스트하기가 어렵다.
     - 내부 속성을 변경하거나 초기화 하기 어렵다.
@@ -142,10 +152,84 @@ public class SingletonService {
 
 ## 싱글톤 컨테이너
 - 이제 AppConfig에 있는 것들을 전부 싱글톤 패턴으로 만들면 되는건가?
-    - 아니다. 스프링 컨테이너를 사용하면 스프링 컨테이너가 기본적으로 객체를 전부 다 싱글톤으로 만들어서 관리해줌.
-    - 심지어 스프링 프레임워크는 위의 싱글톤 패턴의 단점을 전부 해결하고 객체를 싱글톤으로 관리해줌 !
+    - 놉 ~! 스프링 컨테이너를 사용하면 스프링 컨테이너가 기본적으로 객체를 전부 다 싱글톤으로 만들어서 관리해줌.
+    - 심지어 스프링 프레임워크는 위의 **싱글톤 패턴의 단점을 전부 해결하고** 객체를 싱글톤으로 관리해줌.
 
 # 3. 싱글톤 컨테이너
+- 스프링 컨테이너는 싱글톤 패턴의 문제점을 해결하면서, 객체 인스턴스를 싱글톤(1개만 생성)으로 관리한다.
+- 지금까지 우리가 학습한 스프링 빈이 바로 싱글톤으로 관리되는 빈!
+
+## 싱글톤 컨테이너
+- 스프링 컨테이너는 싱글턴 패턴을 적용하지 않아도 객체 인스턴스를 싱글톤으로 관리
+    - 이전에 설명한 컨테이너 생성과정 참고
+    - 컨테이너는 객체를 하나만 생성해서 관리함
+    
+    **1. 컨테이너 생성**
+    ```
+    ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+    ```
+    <img src="./image/sec04_1.png">
+
+    **2. 스프링 빈 등록**
+    - 구성정보로 설정된 AppConfig.class를 참고해서 스프링 빈 등록을 완료한 컨테이너
+    - 이제 요청이 들어오면 컨테이너는 새로운 객체 인스턴스를 생성하는 것이 아니라, 이미 빈으로 등록되어 있는 객체들을 이용, 싱글톤으로 관리할 것이다.
+    <img src="./image/sec04_2.png">
+- 스프링 컨테이너는 싱글톤 컨테이너 역할을 한다. 이렇게 싱글톤 객체를 생성하고 관리하는 기능을 싱글톤 레지스트리라고 한다.
+- 스프링 컨테이너의 이런 기능 덕분에 싱글턴 패턴의 모든 단점을 해결하면서 객체를 싱글톤으로 유지할 수 있다.
+    - 싱글톤 패턴을 위한 지저분한 코드가 들어가지 않아도 된다.
+    - DIP, OCP, 테스트, private 생성자로부터 자유롭게 싱글톤을 사용할 수 있다.
+
+## 스프링 컨테이너를 사용하는 테스트 코드
+```
+public class SingletonTest {
+    @Test
+    @DisplayName("스프링 컨테이너와 싱글톤")
+    void springContainer(){
+
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        MemberService memberService1 = ac.getBean("memberService", MemberService.class);
+        MemberService memberService2 = ac.getBean("memberService", MemberService.class);
+
+        // 참조값 비교
+        System.out.println("memberService1 = " + memberService1);
+        System.out.println("memberService2 = " + memberService2);
+
+        // 검증 memberService1 = memberService2
+        assertThat(memberService1).isSameAs(memberService2);
+    }
+}
+```
+<img src="./image/sec05_5.png">
+
+- AppConfig를 구성정보로 갖는 스프링 컨테이너 생성
+- 구성정보를 기반으로 스프링 빈 등록되는 것 확인가능
+- 참조값 비교해보면 서로 다른 요청이지만 반환된 객체 인스턴스의 참조값은 동일한 것을 알 수 있음
+
+## 싱글톤 컨테이너 적용 전/후
+<table>
+    <thead>
+        <tr>
+            <th>Before</th>
+            <th>After</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><img src="./image/sec05_1.png"></td>
+            <td><img src="./image/sec05_6.png"></td>
+        </tr>
+        <tr>
+            <td>요청건마다 새로운 객체 생성</td>
+            <td>서로 다른 요청에도 이미 만들어 둔 동일한 객체를 이용</td>
+        </tr>
+    </tbody>
+</table>
+
+- 스프링 컨테이너 덕분에 고객의 요청이 올 때 마다 객체를 생성하는 것이 아니라, 이미 만들어진 객체를 공유해서 효율적으로 재사용할 수 있다. → 속도가 훨씬 빨라짐
+
+## 참고
+- 스프링의 기본 빈 등록 방식은 싱글톤이지만, 싱글톤 방식만 지원하는 것은 아니다. 요청할 때마다 새로운 객체를 생성해서 반환하는 기능도 제공함. (자세한 내용은 빈 스코프에서)
 
 # 4. 싱글톤 방식의 주의점
 
