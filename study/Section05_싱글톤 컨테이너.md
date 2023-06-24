@@ -327,5 +327,134 @@ void statefulServiceSingleton(){
 - 반환되는 주문금액을 각각 userAPrice, userBPrice라는 <U>**지역변수**</U>에 담아두면, 동일한 객체 인스턴스를 사용하지만 서로 공유되지 않는 지역변수를 이용하기 때문에 문제가 발생하지 않음
 
 # 5. @Configuration과 싱글톤
+## 의문, AppConfig
+```
+@Configuration
+public class AppConfig {
+
+    //@Bean memberService -> new MemoryMemberRepository()
+    //@Bean orderService -> new MemoryMemberRepository()
+    //@Bean memberRepository -> new MemoryMemberRepository()
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImpl(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new RateDiscountPolicy();
+    }
+}
+```
+1. @Bean memberService() 호출 → new MemoryMemberRepository()
+2. @Bean orderService() 호출 → new MemoryMemberRepository()
+3. @Bean memberRepository() 호출 → new MemoryMemberRepository()
+- 스프링 컨테이너는 모든 객체를 싱글톤으로 관리한다고 했는데, AppConfig의 memberService(), orderService(), memberRepository() 3개의 메소드는 각각 서로 다른 MemoryMemberRepository객체를 생성하게 된다.
+- 각각 다른 MemoryMemberRepository객체가 생성되면서 싱글톤이 깨지는 것 처럼 보인다. 싱글톤을 유지하기 위해 스프링 컨테이너는 이 문제를 어떻게 해결하나?
+
+## 검증하기
+- 테스트를 위해 MemberRepository를 조회할 수 있는 기능 추가
+```
+public class MemberServiceImpl implements MemberService{
+    
+    private final MemberRepository memberRepository;
+
+    public MemberRepository getMemberRepository(){
+        return memberRepository;
+    }
+}
+```
+
+```
+public class OrderServiceImpl implements OrderService{
+
+    private final MemberRepository memberRepository;
+
+    public  MemberRepository getMemberRepository(){
+        return memberRepository;
+    }
+}
+```
+
+
+- 테스트 코드 작성
+```
+public class ConfigurationSingletonTest {
+
+    @Test
+    void configurationTest(){
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+        MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
+        OrderServiceImpl orderService = ac.getBean("orderService", OrderServiceImpl.class);
+        MemberRepository memberRepository = ac.getBean("memberRepository", MemberRepository.class);
+
+        MemberRepository memberRepository1 = memberService.getMemberRepository();
+        MemberRepository memberRepository2 = orderService.getMemberRepository();
+
+        System.out.println("memberService -> memberRepository = " + memberRepository1);
+        System.out.println("orderService -> memberRepository = " + memberRepository2);
+        System.out.println("memberRepository = " + memberRepository);
+
+        Assertions.assertThat(memberService.getMemberRepository()).isSameAs(memberRepository);
+        Assertions.assertThat(orderService.getMemberRepository()).isSameAs(memberRepository);
+    }
+}
+```
+<img src="./image/sec05_7.png">
+
+- 확인해보니 memberRepository 인스턴스는 모두 같은 인스턴스가 공유되어 사용된다.
+- AppConfig의 자바 코드를 보면 분명히 각각 new MemoryMemberRepository를 호출해서 다른 인스턴스가 생성되어야 하는데... 
+
+## 메소드 호출 검증
+- 혹시 메소드가 호출되지 않는건 아닌지 테스트
+- 호출 로그 남기기
+```
+@Configuration
+public class AppConfig {
+    //실제호출
+    //call AppConfig.memberService
+    //call AppConfig.memberRepository
+    //call AppConfig.orderService
+
+    @Bean
+    public MemberService memberService(){
+        System.out.println("call AppConfig.memberService");
+        return new MemberServiceImpl(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        System.out.println("call AppConfig.orderService");
+        return new OrderServiceImpl(memberRepository(), discountPolicy());
+    }
+    @Bean
+    public MemberRepository memberRepository(){
+        System.out.println("call AppConfig.memberRepository");
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new RateDiscountPolicy();
+    }
+}
+```
+- memberService(), orderService(), memberRepository() 를 순서대로 호출했다고 가정했을때, 예상되는 로그 내역은
+    - call AppConfig.memberService
+    - call AppConfig.memberRepository
+    - call AppConfig.orderService
+    - call AppConfig.memberRepository
+    - call AppConfig.memberRepository
+    - 스프링 컨테이너가 각각 @Bean을 호출하여 스프링 빈을 생성한다. 그래서 memberRepository()는 총 3번이 호출되므로 위와 같은 로그가 남을 것이라 예상할 수 있다.
+- 실제 호출 로그
+    - 하지만 실제 출력 결과는 모두 1번씩만 호출된다.
+    - why?!??!?!?
+    <img src="./image/sec05_8.png">
 
 # 6. @Configuration과 바이트코드 조작의 마법
