@@ -458,3 +458,77 @@ public class AppConfig {
     <img src="./image/sec05_8.png">
 
 # 6. @Configuration과 바이트코드 조작의 마법
+- 스프링 컨테이너는 싱글톤 레지스트리다. 따라서 스프링 빈이 싱글톤이 되도록 보장해준다.
+- 싱글톤으로 보장해주기 위해 스프링은 클래스의 바이트코드를 조작하는 라이브러리를 사용한다.
+## @Configuration을 적용한 AppConfig
+```
+    @Test
+    void configurationDeep(){
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+        // 컨테이너에 등록된 AppConfig 빈을 bean변수에 담기
+        AppConfig bean = ac.getBean(AppConfig.class); 
+
+        // bean변수에 담은 AppConfig의 클래스 정보 출력
+        // .getClass() 라고 적으면 해당 빈의 클래스 타입이 뭔지 확인가능
+        System.out.println("bean.getClass() = " + bean.getClass());
+    }
+```
+- AnnotationConfigApplicationContext에 파라미터로 넘긴 값 또한 스프링 빈으로 등록되므로, AppConfig도 스프링 빈으로 등록된다.
+- AppConfig 스프링 빈을 조회해서 클래스 정보를 확인해보면,
+<img src="./image/sec05_9.png">
+    - 순수한 클래스라면 **class hello.core.AppConfig** 라고 출력되어야 한다.
+    - 그러나 지금은 클래스 명에 xxxCGLIB이 붙으면서 상당히 복잡해져 있음.
+    - <U>**이것은 내가 만든 클래스가 아니라 스프링이 CGLIB이라는 바이트코드 조작 라이브러리를 이용하여 AppConfig클래스를 상속받은 임의의 다른 클래스를 만들고, 그 다른 클래스를 스프링 빈으로 등록한 것!**</U>
+    <img src="./image/sec05_10.png">
+    - AppConfig@CGLIB 이라는 임의의 다른 클래스가 바로 싱글톤이 보장되도록 해주고 있는 것!
+    - AppConfig@CGLIB 예상코드
+    ```
+    @Bean
+    public MemberRepository memberRepository(){
+        
+        if(memoryMemberRepository가 이미 스프링 컨테이너에 등록되어 있으면){
+            return 스프링 컨테이너에서 찾아서 반환;
+        } else { // 스프링 컨테이너에 없으면
+            기존 로직을 호출해서 MemoryMemberRepository를 생성하고 스프링 컨테이너에 등록
+            return 반환
+        }
+    }
+    ```
+    - 이 덕분에 싱글톤이 보장되는 것!
+    - 참고로 AppConfig@CGLIB은 AppConfig의 자식 타입이므로 AppConfig타입으로 조회가 가능하다. 그래서 아래와 같은 코드가 가능했던 것.
+    ```
+    @Test
+    void configurationDeep(){
+        ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+        AppConfig bean = ac.getBean(AppConfig.class); // 이 부분이 가능한 이유 !
+
+        System.out.println("bean.getClass() = " + bean.getClass());
+    }
+    ```
+
+## @Configuration을 적용하지 않고, @Bean만 적용하면 어떻게 되나
+- @Configuration을 붙이면 바이트코드를 조작하는 CGLIB 기술을 사용해서 싱글톤을 보장하지만, 만약 @Bean만 적용하면 어떻게 되는가?
+```
+//@Configuration 삭제
+public class AppConfig{
+
+}
+```
+> bean = class hello.core.AppConfig
+- 위 출력결과를 통해 AppConfig가 CGLIB기술 없이 순수한 AppConfig로 스프링 빈에 등록된 것을 확인가능
+> call AppConfig.memberService   
+> call AppConfig.memberRepository   
+> call AppConfig.orderService   
+> call AppConfig.memberRepository   
+> call AppConfig.memberRepository
+
+- 이 출력 결과를 통해 MemberRepository가 총 3번 호출된 것을 확인가능
+- 즉, 서로다른 memberRepository 객체 인스턴스가 3개 생성된 것을 의미한다.
+- 당연히 인스턴스가 같은지 테스트 하는 코드도 실패하고, 각각 다 다른 MemoryMemberRepository인스턴스를 가지고 있다.
+
+## 정리
+- @Bean만 사용해도 스프링 빈으로 등록되지만, 싱글톤은 보장하지 않는다.
+    - memberRepository() 처럼 의존관계 주입이 필요해서 메서드를 직접 호출할때 싱글톤을 보장하지 않음. 새로운 객체가 생성되어 주입되는 것
+- <U>**스프링 설정 정보는 항상 @Configuration 을 사용하기!!!!!**</U>
+
+
