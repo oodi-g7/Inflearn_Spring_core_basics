@@ -98,5 +98,47 @@ public class AutoAppConfigTest {
 <img src="./image/sec06_4.png">
 
 # 2. 탐색 위치와 기본 스캔 대상
+## @ComponentScan 탐색 위치
+- 컴포넌트 스캔시, 모든 자바 클래스와 라이브러리를 전부 컴포넌트 스캔하면 시간이 오래 걸리므로 필요한 위치부터 탐색할 수 있도록 시작위치를 지정할 수 있다.
+```
+@ComponentScan(
+    basePackages = "hello.core.member",
+    basePackageClasses = "AutoAppConfig"
+)
+```
+- basePackages : 탐색할 패키지의 시작 위치를 지정한다. 이 패키지를 포함한 하위 패키지를 모두 탐색한다.
+    ```
+    // 다음과 같이 여러 시작 위치를 지정할 수도 있다.
+    @ComponentScan(
+        basePackages = "hello.core.member", "hello.core.order"
+    )
+    ```
+- basePackageClasses : 지정한 클래스의 패키지를 탐색 시작 위치로 지정한다.
+- [Default] 시작위치 지정안함 : @ComponentScan이 붙은 설정 정보 클래스의 패키지가 시작 위치가 된다.
+- [Default] useDefaultFilters = true : 해당 옵션은 기본으로 켜져있는데, 이 옵션을 끄면 기본 스캔 대상들이 제외됨.
+
+**권장 방법**
+- basePackages나 basePackageClasses 등 패키지 위치를 지정하는 것보단, 설정 정보 클래스(현재는 AutoAppConfig.class)의 위치를 프로젝트 최상단에 두기
+- 최근 스프링 부트도 해당 방법을 기본으로 제공
+- 현재 프로젝트에서는 com.hello가 프로젝트 시작 루트이므로, 여기에 AppConfig와 같은 설정정보를 둔 후 @ComponentScan어노테이션을 붙여준다.
+- 따라서 com.hello를 포함한 하위는 모두 자동으로 컴포넌트 스캔의 대상이 될 수 있음.
+- 스프링 부트 시작시, 스프링 부트의 대표 시작 정보인 @SpringBootApplication을 프로젝트 시작 루트 위치에 두는 것이 관례, <U>**그리고 이 설정 안해 바로 @ComponentScan이 들어있다.**</U>
+    - 따라서 스프링 부트를 사용시, @ComponentScan 을 사용할 필요가 없다. 그 이유는 @SpringBootApplication에 @ComponentScan이 이미 있는걸로 보아, 스프링 부트 자체에서 이미 컴포넌트 스캔을 해주기 때문.
+
+## 컴포넌트 스캔 기본 대상
+1. @Component : 컴포넌트 스캔에서 사용
+2. @Controller : 스프링 MVC 컨트롤러에서 사용
+3. @Service : 스프링 비즈니스 로직에서 사용
+4. @Repository : 스프링 데이터 접근 계층에서 사용
+5. @Configuration : 스프링 설정 정보에서 사용
+    - 컴포넌트 스캔은 @Component뿐 아니라 위 어노테이션들도 추가로 기본 대상에 포함한다.
+    - 그 이유는 해당 어노테이션의 클래스 코드를 보면 @Component를 포함하고 있기 때문
+    - [참고] 어노테이션에는 상속관계라는 것이 없다. 지금처럼 어노테이션이 특정 어노테이션을 들고 있는 것을 인식하는 건, 자바 언어가 아니라 스프링이 지원하는 기능이다. 
+
+- 아래 어노테이션은 컴포넌트 스캔의 용도 뿐만 아니라 스프링의 부가 기능을 수행한다.
+    - @Controller : 스프링 MVC 컨트롤러로 인식
+    - @Repository : 스프링 데이터 접근 계층으로 인식, 데이터 계층의 예외를 스프링 예외로 변환해준다.
+    - @Configuration : 앞서 보았듯 스프링 설정 정보로 인식, 스프링 빈이 싱글톤을 유지하도록 추가적인 처리를 한다.
+    - @Service : 사실 @Service는 특별한 처리를 하지 않는다. 대신 개발자들이 핵심 비즈니스 로직이 여기에 있겠구나라고 비즈니스 계층을 인식하는데 도움을 준다.
 # 3. 필터
 # 4. 중복 등록과 충돌
