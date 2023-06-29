@@ -141,4 +141,95 @@ public class AutoAppConfigTest {
     - @Configuration : 앞서 보았듯 스프링 설정 정보로 인식, 스프링 빈이 싱글톤을 유지하도록 추가적인 처리를 한다.
     - @Service : 사실 @Service는 특별한 처리를 하지 않는다. 대신 개발자들이 핵심 비즈니스 로직이 여기에 있겠구나라고 비즈니스 계층을 인식하는데 도움을 준다.
 # 3. 필터
+- includeFilters : 컴포넌트 스캔 대상을 추가로 지정
+- excludeFilters : 컴포넌트 스캔에서 제외할 대상을 지정
+## 사용방법
+**1. 컴포넌트 스캔 대상에 추가할 애노테이션 생성**
+```
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MyIncludeComponent { }
+```
+- 이렇게 해주면 @MyIncludeComponent 라는 어노테이션이 만들어 진 것. 이제 컴포넌트 스캔 대상에 추가할 인스턴스가 생기면 해당 어노테이션을 붙이면 됨.
+- @Target, @Retention, @Documented 어노테이션 공부 필요 !!
+
+**2. 컴포넌트 스캔 대상에서 제외할 애노테이션 생성**
+```
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MyExcludeComponent { }
+```
+- @MyExcludeComponent 라는 어노테이션 생성 완료. 컴포넌트 스캔 대상에 제외할 인스턴스에 해당 어노테이션 사용하면 됨.
+
+**3. 테스트용 빈 생성**
+```
+// 컴포넌트 스캔 대상에 추가할 클래스
+@MyIncludeComponent
+public class BeanA { }
+```
+```
+// 컴포넌트 스캔 대상에서 제외할 클래스
+@MyExcludeComponent
+public class BeanB{ }
+```
+
+**4. 검증**
+- 검증 전에, AppConfig만들어주기
+```
+public class ComponentFilterAppConfigTest {
+
+    @Configuration
+    @ComponentScan(
+        includeFilters = @Filter(type = FilterType.ANNOTATION, classes = MyIncludeComponent.class),
+        excludeFilters = @FIlter(type = FilterType.ANNOTATION,
+        classes = MyExcludeComponent.class)
+    )
+    static class ComponentFilterAppConfig {
+
+    }
+}
+```
+- 만들어둔 테스트용 AppConfig로 스프링 컨테이너 생성 및 필터 테스트
+- 예상
+    - MyIncludeComponent 어노테이션을 적용한 BeanA는 스프링 빈에 등록
+    - MyExcludeComponent 어노테이션을 적용한 BeanB는 스프링 빈에 없음
+```
+public class ComponentFilterAppConfigTest {
+    
+    @Test
+    void filterScan(){
+        ApplicationContext ac = new AnnotationConfigApplicationContext(ComponentFilterAppConfig.class);
+
+        BeanA beanA = ac.getBean("beanA", BeanA.class);
+        assertThat(beanA).isNotNull(); //스프링 컨테이너에 beanA 존재
+
+        Assertions.assertThrows(
+            NoSuchBeanDefinitionException.class,
+            () -> ac.getBean("beanB", BeanB.class));
+    }
+}
+```
+<img src="./image/sec06_5.png">
+
+- 우선 AnnotationConfigApplicationContext 객체를 생성
+- AnnotationConfigApplicationContext에 넘겨준 설정정보인 ComponentFilterAppConfig 내용에 따라,
+    - @MyIncludeComponent를 적용한 BeanA을 컴포넌트 스캔 추가 등록되어 콘솔에서 확인가능
+    - @MyExcludeComponent를 적용한 BeanB는 컴포넌트 스캔에서 제외되었으므로 콘솔에서 확인불가
+
+## FilterType 옵션
+- ANNOTATION : 기본값, 어노테이션을 인식해서 동작
+    - ex) org.example.SomeAnnotation
+- ASSIGNABLE_TYPE : 지정한 타입과 자식 타입을 인식해서 동작
+    - ex) org.example.SomeClass
+- ASPECTJ : AspectJ 패턴 사용
+    - ex) org.example..*Service+
+- REGEX : 정규 표현식
+    - ex) org\.example\.Default.*
+- CUSTOM : TypeFilter라는 인터페이스를 직접 구현해서 처리
+    - ex) org.example.MyTypeFilter
+
+> [참고] @Component 면 충분하므로, includeFilters를 사용할 일은 거의 없음. excludeFilters는 여러 이유로 간혹 사용할때가 있지만 많지는 않다. 특히 최근 스프링 부트는 컴포넌트 스캔을 기본적으로 제공하므로, 옵션을 변경하며 사용하기 보다는 스프링의 기본설정에 최대한 맞추어 사용하는 것을 권장한다.
+
 # 4. 중복 등록과 충돌
