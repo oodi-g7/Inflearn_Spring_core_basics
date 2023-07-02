@@ -220,15 +220,15 @@ public class ComponentFilterAppConfigTest {
 
 ## FilterType 옵션
 - ANNOTATION : 기본값, 어노테이션을 인식해서 동작
-    - ex) org.example.SomeAnnotation
+    - (ex) org.example.SomeAnnotation
 - ASSIGNABLE_TYPE : 지정한 타입과 자식 타입을 인식해서 동작
-    - ex) org.example.SomeClass
+    - (ex) org.example.SomeClass
 - ASPECTJ : AspectJ 패턴 사용
-    - ex) org.example..*Service+
+    - (ex) org.example..*Service+
 - REGEX : 정규 표현식
-    - ex) org\.example\.Default.*
+    - (ex) org\.example\.Default.*
 - CUSTOM : TypeFilter라는 인터페이스를 직접 구현해서 처리
-    - ex) org.example.MyTypeFilter
+    - (ex) org.example.MyTypeFilter
 
 > [참고] @Component 면 충분하므로, includeFilters를 사용할 일은 거의 없음. excludeFilters는 여러 이유로 간혹 사용할때가 있지만 많지는 않다. 특히 최근 스프링 부트는 컴포넌트 스캔을 기본적으로 제공하므로, 옵션을 변경하며 사용하기 보다는 스프링의 기본설정에 최대한 맞추어 사용하는 것을 권장한다.
 
