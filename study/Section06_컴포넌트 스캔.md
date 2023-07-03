@@ -233,3 +233,27 @@ public class ComponentFilterAppConfigTest {
 > [참고] @Component 면 충분하므로, includeFilters를 사용할 일은 거의 없음. excludeFilters는 여러 이유로 간혹 사용할때가 있지만 많지는 않다. 특히 최근 스프링 부트는 컴포넌트 스캔을 기본적으로 제공하므로, 옵션을 변경하며 사용하기 보다는 스프링의 기본설정에 최대한 맞추어 사용하는 것을 권장한다.
 
 # 4. 중복 등록과 충돌
+- 컴포넌트 스캔시 같은 빈 이름을 등록할 경우(중복등록) → 충돌발생
+## (1) 자동 빈 등록 vs 자동 빈 등록
+- 컴포넌트 스캔으로 인해 자동으로 빈이 등록될때, 이름이 같은 빈이 두개이상일 경우 스프링은 오류를 발생시킨다.
+    - ConflictingBeanDefinitionException 예외 발생
+    <img src="./image/sec06_6.png">
+
+## (2) 수동 빈 등록 vs 자동 빈 등록
+- 수등으로 등록한 빈과 자동으로 등록한 빈 사이에서 빈 이름이 중복되어 충돌이 발생한다면 ?
+    - 수동으로 등록된 빈이 우선권을 가져, 수동 빈이 자동 빈을 오버라이딩 해버린다.
+    <img src="./image/sec06_7.png">
+        ```
+        Overriding bean definition for bean 'memoryMemberRepository' with a different definition
+        ```
+
+## (3) 스프링 부트 에러
+- 최근 스프링 부트에서는 수동 빈 등록과 자동 빈 등록이 충돌나면 오버라이딩을 하는 것이 아닌, 오류가 발생하도록 기본값을 변경함.
+    - 테스트 코드가 아니라 CoreApplication을 실행해보면 에러확인 가능
+        ```
+        Consider renaming one of the beans or enabling overriding by setting
+        spring.main.allow-bean-definition-overriding=true
+        ```
+    - 에러를 확인해보면 spring.main.allow-bean-definition-overriding=true로 변경시 해당 에러를 해결할 수 있음.
+    - 스프링의 기본값은 ...overriding=false 였던 것 !
+    - allow-bean-definition-overriding=true 를 application.properties에 작성하면 수동 빈이 자동 빈을 오버라이딩하는 기능을 다시 사용할 수 있음.
