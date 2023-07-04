@@ -171,6 +171,12 @@ public class OrderServiceImpl implements OrderService {
     - @Nullable, Optional은 스프링 전반에 걸쳐서 지원된다. 예를들어 생성자 자동 주입에서 특정 필드에만 사용해도 됨.
     
 # 3. 생성자 주입을 선택해라!
+## 생성자 주입을 선택해야 하는 이유 1 : 불변
+
+## 생성자 주입을 선택해야 하는 이유 2 : 누락
+
+## 생성자 주입을 선택해야 하는 이유 3 : final 키워드
+
 # 4. 롬복과 최신 트랜드
 # 5. 조회 빈이 2개 이상 - 문제
 # 6. @Autowired 필드 명, @Qualifier, @Primary
