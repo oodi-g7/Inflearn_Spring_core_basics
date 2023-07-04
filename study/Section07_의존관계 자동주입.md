@@ -94,9 +94,82 @@ public class OrderServiceImpl implements OrderService {
 - 특징
     - 한번에 여러 필드를 주입 받을 수 있다
     - 대게 생성자 주입, 수정자 주입으로 해결할 수 있으므로, 일반 메서드 주입은 잘 사용하지 않음
-    
 
 # 2. 옵션 처리
+- 주입할 스프링 빈이 없어도 동작해야 할 때가 있다.   
+그런데 @Autowired만 사용하면 'required'옵션의 기본값이 'true'로 되어있어서 자동 주입 대상이 없으면 오류가 발생
+
+- **자동 주입대상을 옵션으로 처리하는 방법** (컨테이너에 빈이 등록안되어있어도 문제없이 작동시키는 방법)
+    - @Autowired(required=false)
+        - 자동 주입할 대상이 없으면 수정자 메서드 자체가 호출 안됨
+        ```
+        public class AutowiredTest {
+
+            @Test
+            void AutowiredTest(){
+                ApplicationContext ac = new AnnotationConfigApplicationContext(TestBean.class);
+            }
+
+            static class TestBean {
+                @Autowired(required = false)
+                public void setNoBean1(Member noBean1){
+                    System.out.println("noBean1 = " + noBean1);
+                }
+            }
+        }
+        ```
+        - Member 클래스는 스프링 컨테이너가 관리하지 않는 클래스임
+        - 따라서 @Autowired를 해두어도 컨테이너에 Member빈이 없으므로 아무것도 주입되지 않음
+        - @Autowired 옵션의 기본값인 required = true인 상태에서 테스트를 실행해보면 'NoSuchBeanDefinitionException' 에러 발생
+        - @Autowired(requried = false) 를 해뒀을 경우, 의존관계가 없으면 setNoBean1() 메소드 자체가 아예 호출되지 않음. 따라서 콘솔에 아무것도 안 찍혀 있음.
+    - org.springframwork.lang.@Nullable
+        - 자동 주입할 대상이 없으면 null이 입력됨
+        ```
+        public class AutowiredTest {
+
+            @Test
+            void AutowiredTest(){
+                ApplicationContext ac = new AnnotationConfigApplicationContext(TestBean.class);
+            }
+
+            static class TestBean {
+                @Autowired
+                public void setNoBean2(@Nullable Member noBean2){
+                    System.out.println("noBean2 = " + noBean2);
+                }
+            }
+        }
+        ```
+        - noBean2은 스프링 컨테이너에 등록된 빈이없어, 자동주입할 대상이 없으므로 @Nullable을 통해 null값을 입력해준다.
+        - 생성자 자동 주입에서 특정 필드에 관해 사용할 수도 있다. '해당 필드는 스프링 빈에 없어도 생성자가 호출되면 좋겠는데..' 싶을때
+    - Optional<>
+        - Optional : null일 수도 있고, 아닐수도 있다 라는 상태를 감싼 것.(Java 8)
+        - 자동 주입할 대상이 없으면 Optional.empty 가 입력됨
+        ```
+        public class AutowiredTest {
+
+            @Test
+            void AutowiredTest(){
+                ApplicationContext ac = new AnnotationConfigApplicationContext(TestBean.class);
+            }
+
+            static class TestBean {
+                @Autowired
+                public void setNoBean3(Optional<Member> noBean3){
+                    System.out.println("noBean3 = " + noBean3);
+                }
+            }
+        }
+        ```
+    - 전체 테스트코드 출력결과
+    > noBean2 = null   
+      noBean3 = Optional.empty
+    1. setNoBean1() : @Autowired(required=false)이므로 호출자체가 안됨
+    2. setNoBean2() : @Nullable이므로 null값 들어감
+    3. setNoBean3() : Optional로 감싸져서 상태는 empty라고 나옴
+- 참고
+    - @Nullable, Optional은 스프링 전반에 걸쳐서 지원된다. 예를들어 생성자 자동 주입에서 특정 필드에만 사용해도 됨.
+    
 # 3. 생성자 주입을 선택해라!
 # 4. 롬복과 최신 트랜드
 # 5. 조회 빈이 2개 이상 - 문제
