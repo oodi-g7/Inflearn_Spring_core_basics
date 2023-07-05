@@ -291,6 +291,26 @@ public class OrderServiceImpl implements OrderService{
 - 여기에 Lombok라이브러리의 @RequiredArgsConstructor 까지 함께 사용하면 생성자 주입의 기능은 모두 제공하면서도, 코드는 깔끔하게 사용할 수 있다.
 
 # 5. 조회 빈이 2개 이상 - 문제
+- @Autowired는 타입(Type)으로 조회한다.
+    ```
+    @Autowired
+    private DiscountPolicy discountPolicy
+    ```
+    - 그렇기에 위 코드는 아래 코드와 유사하게 동작한다. (실제로는 더 많은 기능을 제공함.)
+    ```
+    ac.getBean(DiscountPolicy.class)
+    ```
+- 타입으로 조회시, 선택된 빈이 2개 이상일때 문제가 발생한다.
+- 현재 DiscountPolicy의 하위 타입인 RateDiscountPolicy에만 @Component를 붙여 빈으로 등록해두었으나, 나머지 하나인 FixDiscountPolicy에도 @Component를 붙여 둘 다 스프링 빈으로 선언해본다.
+    - 결과는 NoUniqueBeanDefinitionException 오류가 발생한다.
+    ```
+    No qualifying bean of type 'hello.core.discount.DiscountPolicy' available: expected single matching bean but found 2: fixDiscountPolicy,rateDiscountPolicy
+    (하나의 빈을 기대했는데, fixDiscountPolicy, rateDiscountPolicy 2개가 발견되었다.)
+    ```
+- 그렇다면 이 문제를 어떻게 해결?
+    - 하위 타입으로 지정하게 되면 DIP를 위배하고 유연성이 떨어져서 X
+    - 그리고 이름만 다르고 완전히 똑같은 타입의 스프링 빈이 2개일때는 해결이 안된다.
+    
 # 6. @Autowired 필드 명, @Qualifier, @Primary
 # 7. 애노테이션 직접 만들기
 # 8. 조회한 빈이 모두 필요할 때, List, Map
