@@ -228,6 +228,68 @@ public class OrderServiceImpl implements OrderService {
 - 항상 생성자 주입을 선택하기! 그리고 가끔 옵션이 필요하다면 수정자 주입을 선택하기. 필드 주입을 사용하지 않는게 좋다.
 
 # 4. 롬복과 최신 트랜드
+- 생성자 주입방식을 사용해야하는데, 코드 양이 너무 많다.
+    - 필드에 final키워드
+    - 생성자 코드
+    - 주입받은 값을 대입하는 코드 
+- 이를 깔끔하게 줄여주는 라이브러리 : Lombok
+
+## 기본 코드 리팩토링
+**기본코드**
+```
+@Component
+public class OrderServiceImpl implements OrderService{
+
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+    
+    @Autowired
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+}
+```
+- 생성자가 단 1개일 경우, @Autowired를 생략가능하다.
+
+```
+@Component
+public class OrderServiceImpl implements OrderService{
+
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+    
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+}
+```
+- 이제 롬복을 적용한다.
+    - 롬복 라이브러리가 제공하는 @RequiredArgsConstructor 기능을 사용하면 final이 붙은 필드를 모아서 생성자를 자동으로 만들어준다.
+        - 코드에서는 보이지 않지만 실제 호출이 가능하다.
+        - 정상적으로 생성이 잘 되었는지 궁금하다면 ctrl+F12 로 생성자메소드 확인이 가능하다.
+        <img src="./image/sec07_3.png">
+
+**최종 리팩토링 코드**
+```
+@Component
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService{
+
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+    
+}
+```
+- 이 최종결과 코드와 이전 기본 코드는 완전히 동일하다.
+- 롬복이 자바의 애노테이션 프로세서라는 기능을 이용하여 컴파일 시점에 생성자 코드를 자동으로 생성해준다.
+- 만약 생성자에 추가해야할 파라미터가 있을때, final이 붙은 필드한줄만 작성해준다면 생성자 코드를 수정할 필요 없이 롬복 라이브러리가 자동으로 만들어주므로 매우 편리하게 사용가능하다.
+
+## 정리
+- 최근에는 생성자를 1개 두고 @Autowired를 생략하는 방법을 주로 사용한다.
+- 여기에 Lombok라이브러리의 @RequiredArgsConstructor 까지 함께 사용하면 생성자 주입의 기능은 모두 제공하면서도, 코드는 깔끔하게 사용할 수 있다.
+
 # 5. 조회 빈이 2개 이상 - 문제
 # 6. @Autowired 필드 명, @Qualifier, @Primary
 # 7. 애노테이션 직접 만들기
