@@ -303,15 +303,118 @@ public class OrderServiceImpl implements OrderService{
 - 타입으로 조회시, 선택된 빈이 2개 이상일때 문제가 발생한다.
 - 현재 DiscountPolicy의 하위 타입인 RateDiscountPolicy에만 @Component를 붙여 빈으로 등록해두었으나, 나머지 하나인 FixDiscountPolicy에도 @Component를 붙여 둘 다 스프링 빈으로 선언해본다.
     - 결과는 NoUniqueBeanDefinitionException 오류가 발생한다.
-    ```
-    No qualifying bean of type 'hello.core.discount.DiscountPolicy' available: expected single matching bean but found 2: fixDiscountPolicy,rateDiscountPolicy
+    > No qualifying bean of type 'hello.core.discount.DiscountPolicy' available: expected single matching bean but found 2: fixDiscountPolicy,rateDiscountPolicy
     (하나의 빈을 기대했는데, fixDiscountPolicy, rateDiscountPolicy 2개가 발견되었다.)
-    ```
+    
 - 그렇다면 이 문제를 어떻게 해결?
     - 하위 타입으로 지정하게 되면 DIP를 위배하고 유연성이 떨어져서 X
     - 그리고 이름만 다르고 완전히 똑같은 타입의 스프링 빈이 2개일때는 해결이 안된다.
     
 # 6. @Autowired 필드 명, @Qualifier, @Primary
+- 조회 대상 빈이 2개 이상일 때 해결방법
+    1. @Autowired 필드 명 매칭
+    2. @Qualifier → @Qualifier끼리 매칭 → 빈 이름 매칭
+    3. @Primary 사용
+
+## @Autowired 필드 명 매칭
+1. @Autowired는 타입매칭을 시도한다.
+2. 이때 여러 빈이 있으면 <U>**필드 이름, 파라미터 이름**</U>으로 빈 이름을 추가 매칭한다.
+```
+// 기존코드
+@Autowired
+private DiscountPolicy discountPolicy;
+```
+- DiscountPolicy 하위에는 RateDiscountPolicy와 FixDiscountPolicy 두 개가 존재.
+- 타입매칭을 시도할경우 두가지의 빈이 조회되므로, 코드를 아래처럼 바꾸면 필드명 매칭이 가능해진다.
+```
+// 필드명을 컨테이너에 등록된 빈 이름으로 변경
+@Autowired
+private DiscountPolicy rateDiscountPolicy;
+```
+- 필드명이 rateDiscountPolicy이므로 정상 주입된다.
+- **필드 명 매칭은 먼저 타입 매칭을 시도하고 그 결과로 여러 빈이 있을때 추가로 동작하는 기능이다.**
+
+## @Qualifier 사용
+- @Qualifier는 추가 구분자를 붙여주는 방법. 주입시 추가적인 방법을 제공하는 것 뿐, 빈 이름을 변경하는 것은 아님
+    - (1) @Qualifier끼리 매칭한다.
+    - (2) @Qualifier("...") 을 못찾았을 경우, "..."이라는 빈 이름을 매칭한다.
+    - (3) "..."이라는 빈 또한 찾지 못했을 경우, NoSuchBeanDefinitionException 예외가 발생한다.
+1. 빈 등록시 @Qualifier를 붙여준다.
+```
+@Component
+@Qualifier("mainDiscountPolicy")
+public class RateDiscountPolicy implements DiscountPolicy {}
+```
+```
+@Component
+@Qualifier("fixDiscountPolicy")
+public class FixDiscountPolicy implements DiscountPolicy {}
+```
+2.  주입시 @Qualifier를 붙여주고 등록한 이름을 적어준다.
+```
+// 예시 - 생성자 자동 주입시
+@Autowired
+public OrderServiceImpl(MemberRepository memberRepository, @Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy){
+    this.memberRepository = memberRepository;
+    this.discountPolicy = discountPolicy;
+}
+```
+```
+// 예시 - 수정자 자동 주입시
+@Autowired
+public DiscountPolicy setDiscountPolicy(@Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy) {
+    this.discountPolicy = discountPolicy;
+}
+```
+- @Qualifier로 주입할때 @Qualifier("mainDiscountPolicy")를 못찾으면 어떻게 될까?
+    - @Qualifier로 등록한 이름인 mainDiscountPolicy라는 이름의 스프링 빈을 추가로 찾는다.
+    - 하지만 @Qualifier는 @Qualifier를 찾는 용도로만 사용하는 것이 명확하고 좋음
+3. 기타 - 직접 빈 등록시에도 @Qualifier사용가능
+```
+@Bean
+@Qualifier("mainDiscountPolicy)
+public DiscountPolicy discountPolicy(){
+    return new ...
+}
+```
+
+## @Primary 사용
+- @Primary는 우선순위를 정하는 방법.
+- @Autowired 시 여러빈이 매칭되면 @Primary 어노테이션이 붙은 클래스가 우선권을 가진다.
+```
+// RateDiscountPolicy가 우선권을 가지도록 한다.
+@Component
+@Primary
+public class RateDiscountPolicy implements DiscountPolicy {}
+
+@Component
+public class FixDiscountPolicy implements DiscountPolicy {}
+```
+```
+// 생성자
+@Autowired
+public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy){
+    this.memberRepository = memberRepository;
+    this.discountPolicy = discountPolicy;
+}
+
+// 수정자
+@Autowired
+public DiscountPolicy setDiscountPolicy(DiscountPolicy discountPolicy){
+    this.discountPolicy = discountPolicy;
+}
+```
+- 코드를 실행해보면, @Primary 어노테이션을 갖고 있는 RateDiscountPolicy가 정상적으로 주입된 것을 확인할 수 있다.
+
+### @Qualifier VS @Primary
+- @Qualifier의 단점은 주입 받을때 모든 코드에 @Qualifier를 붙여주어야 한다는 점이다.
+- @Primary를 사용하면 @Qualifier와는 다르게 모든 코드에 어노테이션을 붙일 필요가 없다.
+- @Qualifier와 @Primary 활용
+    - 자주 사용하는 메인DB커넥션 획득빈과, 가끔 사용하는 서브DB커넥션 획득빈이 있을때, 메인DB커넥션 획득빈은 @Primary를 적용하여 조회하는 곳에서 @Qualifier지정 없이 편리하게 조회하고, 가끔 서브DB커넥션이 필요할때는 @Qualifier를 지정하여 명시적으로 획득하는 방식 사용하면 코드를 깔끔히 유지 가능.
+- 우선순위
+    - @Primary는 기본값처럼 동작, @Qualifier는 매우 상세하게 동작
+    - 두 어노테이션이 모두 붙어있을때, @Qualifier가 우선권을 갖는다.
+
 # 7. 애노테이션 직접 만들기
 # 8. 조회한 빈이 모두 필요할 때, List, Map
 # 9. 자동, 수동의 올바른 실무 운영 기준
