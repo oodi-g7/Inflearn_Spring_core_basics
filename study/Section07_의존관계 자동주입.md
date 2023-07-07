@@ -232,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
     - 필드에 final키워드
     - 생성자 코드
     - 주입받은 값을 대입하는 코드 
-- 이를 깔끔하게 줄여주는 라이브러리 : Lombok
+- 이를 깔끔하게 줄여주는 라이브러리 : 롬복(Lombok)
 
 ## 기본 코드 리팩토링
 **기본코드**
