@@ -416,5 +416,6 @@ public DiscountPolicy setDiscountPolicy(DiscountPolicy discountPolicy){
     - 두 어노테이션이 모두 붙어있을때, @Qualifier가 우선권을 갖는다.
 
 # 7. 애노테이션 직접 만들기
+
 # 8. 조회한 빈이 모두 필요할 때, List, Map
 # 9. 자동, 수동의 올바른 실무 운영 기준
