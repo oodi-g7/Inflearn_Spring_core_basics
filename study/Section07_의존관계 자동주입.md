@@ -458,4 +458,21 @@ public DiscountPolicy setDiscountPolicy(@MainDiscountPolicy DiscountPolicy disco
 - 단적으로 @Autowired도 재정의할 수 있다. 물론 스프링이 제공하는 기능을 뚜렷한 목적 없이 무분별하게 재정의하는 것은 유지보수에 더 혼란만 가중할 수 있으니 신중할 필요가 있다.
 
 # 8. 조회한 빈이 모두 필요할 때, List, Map
+## AllBeanTest.class 로직분석
+- DiscountService는 Map으로 모든 DiscountPolicy를 주입받는다. 이때 fixDiscountPolicy, rateDiscountPolicy가 주입된다.
+- discount() 메서드는 discountCode로 "fixDiscountPolicy"가 넘어오면 map에서 fixDiscountPolicy 스프링 빈을 찾아서 실행한다. 물론 "rateDiscountPolicy"가 넘어오면 rateDiscountPolicy 스프링 빈을 찾아서 실행한다.
+
+## AllBeanTest.class 주입분석
+- Map<String, DiscountPolicy> : map의 키에 스프링 빈의 이름을 넣어주고, 그 값으로 DiscountPolicy타입으로 조회한 모든 스프링 빈을 담아준다.
+- List<DiscountPolicy> : DiscountPolicy 타입으로 조회한 모든 스프링 빈을 담아준다.
+- 만약 해당하는 타입의 스프링 빈이 없으면, 빈 컬렉션이느 Map을 주입한다.
+
+## 스프링 컨테이너를 생성하면서 스프링 빈 등록하기
+> new AnnotationConfigApplicationContext(AutoAppConfig.class, DiscountService.class);
+- 스프링 컨테이너는 생성자에 클래스 정보를 받는다. 클래스 정보를 넘기면 해당 클래스가 스프링 빈으로 자동 등록된다.
+    - 이 코드는 2가지로 나누어 이해가능하다.
+    - new AnnotationConfigApplicationContext() 를 통해 스프링 컨테이너를 생성한다.
+    - AutoAppConfig.class, DiscountService.class 를 파라미터로 넘기면서 해당 클래스를 자동으로 스프링빈으로 등록한다.
+    - 정리하면 스프링 컨테이너를 생성하면서, 해당 컨테이너에 동시에 AutoAppConfig, DiscountService를 스프링 빈으로 자동등록한다.
+
 # 9. 자동, 수동의 올바른 실무 운영 기준
