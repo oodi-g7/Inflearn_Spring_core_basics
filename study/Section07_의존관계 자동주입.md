@@ -416,6 +416,46 @@ public DiscountPolicy setDiscountPolicy(DiscountPolicy discountPolicy){
     - 두 어노테이션이 모두 붙어있을때, @Qualifier가 우선권을 갖는다.
 
 # 7. 애노테이션 직접 만들기
+- @Qualifier("mainDiscountPolicy") 이렇게 "mainDiscountPolicy" 문자를 적으면, 컴파일시 타입 체크가 안된다. 그래서 오탈자가 났을 경우에도 프로젝트를 실행하여 에러를 통해 확인이 가능하다.
+- 따라서 아래와 같은 어노테이션을 만들어 문제를 해결할 수 있다.
+```
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+@Qualifier("mainDiscountPolicy")
+public @interface MainDiscountPolicy { 
+}
+```
+- @MainDiscountPolicy 라는 어노테이션이 만들어졌다. 이제 @MainDiscountPolicy 어노테이션을 사용시, 해당 어노테이션에 걸려있는 아래의 어노테이션들의 기능들이 모두 동작한다.
+    - @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+    - @Retention(RetentionPolicy.RUNTIME)
+    - @Inherited
+    - @Documented
+```
+@Component
+@MainDiscountPolicy
+public class RateDiscountPolicy implements DiscountPolicy {}
+```
+- @Qualifier("mainDiscountPolicy") 와 같이 사용했을때는 컴파일시 오탈자등을 확인할 수 없었지만, 이를 어노테이션으로 만들면 컴파일시 타입 체크를 원활하게 할 수 있다.
+
+## 사용법
+```
+// 생성자 자동 주입
+@Autowired
+public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy DiscountPolicy discountPolicy) {
+    this.memberRepository = memberRepository;
+    this.discountPolicy = discountPolicy;
+}
+
+// 수정자 자동 주입
+@Autowired
+public DiscountPolicy setDiscountPolicy(@MainDiscountPolicy DiscountPolicy discountPolicy) {
+    this.discountPolicy = discountPolicy;
+}
+```
+- 어노테이션에는 상속이라는 개념이 없다. 이렇게 여러 어노테이션을 모아서 사용하는 기능은 스프링이 지원해주는 기능이다. @Qualifier뿐만 아니라 다른 어노테이션들도 함께 조합해서 사용할 수 있다.
+- 단적으로 @Autowired도 재정의할 수 있다. 물론 스프링이 제공하는 기능을 뚜렷한 목적 없이 무분별하게 재정의하는 것은 유지보수에 더 혼란만 가중할 수 있으니 신중할 필요가 있다.
 
 # 8. 조회한 빈이 모두 필요할 때, List, Map
 # 9. 자동, 수동의 올바른 실무 운영 기준
