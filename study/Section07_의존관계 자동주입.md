@@ -476,3 +476,6 @@ public DiscountPolicy setDiscountPolicy(@MainDiscountPolicy DiscountPolicy disco
     - 정리하면 스프링 컨테이너를 생성하면서, 해당 컨테이너에 동시에 AutoAppConfig, DiscountService를 스프링 빈으로 자동등록한다.
 
 # 9. 자동, 수동의 올바른 실무 운영 기준
+- 기본은 자동 등록 기능
+- 직접 등록하는 기술 지원 객체는 수동 등록 기능
+- 다형성을 적극 활용하는 비즈니스 로직은 수동 등록을 고민해보기
