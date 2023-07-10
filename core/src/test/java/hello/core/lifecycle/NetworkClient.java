@@ -3,7 +3,8 @@ package hello.core.lifecycle;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
-public class NetworkClient implements InitializingBean, DisposableBean {
+public class NetworkClient implements 
+        InitializingBean, DisposableBean { // 지금은 잘 쓰지 않는 방법
 
     private String url;
 
