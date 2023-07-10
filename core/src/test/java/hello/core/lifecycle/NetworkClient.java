@@ -3,6 +3,9 @@ package hello.core.lifecycle;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
+import javax.annotation.PostConstruct; // javax. ~ : 자바진영에서 공식적으로 지원하는 패키지
+import javax.annotation.PreDestroy;
+
 public class NetworkClient {
 
     private String url;
@@ -44,12 +47,26 @@ public class NetworkClient {
 //    }
 
 //    - 빈 등록 초기화, 소멸 메서드 이용
+//    public void init() {
+//        System.out.println("NetworkClient.init");
+//        connect();
+//        call("초기화 연결 메시지");
+//    }
+//
+//    public void close() {
+//        System.out.println("NetworkClient.close");
+//        disconnect();
+//    }
+
+//    - @PostConstruct, @PreDestroy 사용
+    @PostConstruct
     public void init() {
         System.out.println("NetworkClient.init");
         connect();
         call("초기화 연결 메시지");
     }
 
+    @PreDestroy
     public void close() {
         System.out.println("NetworkClient.close");
         disconnect();
