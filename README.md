@@ -17,6 +17,6 @@
 - [section04 : 스프링 컨테이너와 스프링 빈](./study/Section04_%EC%8A%A4%ED%94%84%EB%A7%81%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EC%99%80%20%EC%8A%A4%ED%94%84%EB%A7%81%20%EB%B9%88.md)
 - [section05 : 싱글톤 컨테이너](./study/Section05_%EC%8B%B1%EA%B8%80%ED%86%A4%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88.md)
 - [section06 : 컴포넌트 스캔](./study/Section06_%EC%BB%B4%ED%8F%AC%EB%84%8C%ED%8A%B8%20%EC%8A%A4%EC%BA%94.md)
-- [section07 : 의존관계 자동 주입](./study/Section07_의존관계 자동주입.md)
+- [section07 : 의존관계 자동 주입](./study/Section07_의존관계%20자동주입.md)
 - section08 : 빈 생명주기 콜백
 - section09 : 빈 스코프
