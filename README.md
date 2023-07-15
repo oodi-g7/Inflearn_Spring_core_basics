@@ -22,4 +22,4 @@
 - section09 : 빈 스코프
 
 ## ❤️😎✌️
-<img src="./study/image/Certificate.png">
+<img src="./study/image/certificate.png">
