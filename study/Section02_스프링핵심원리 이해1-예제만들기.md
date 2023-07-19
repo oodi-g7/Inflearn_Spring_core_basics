@@ -35,7 +35,7 @@
     - Impl이란건 implements를 줄여 사용하는 것인데, 인터페이스의 구현체가 <U>단 하나</U>일 경우 ~Impl이라고 관례상 많이 사용한다.
 
 # 5. 회원 도메인 실행과 테스트 
-```
+```java
 public class MemberServiceTest {
 
     MemberService memberService = new MemberServiceImpl();
@@ -58,7 +58,7 @@ public class MemberServiceTest {
 - 다른 저장소로 변경할 때 OCP원칙을 잘 준수할까? → NO
 - DIP를 잘 지키고 있나? → NO
 - 이유
-    ```
+    ```java
     public class MemberServiceImpl implements MemberService{
         private final MemberRepository memberRepository = new MemoryMemberRepository();
     }
@@ -98,6 +98,58 @@ public class MemberServiceTest {
 - 즉, 구현체가 바뀌어도 역할들의 협력 관계를 그대로 재사용 할 수 있다.
 
 # 7. 주문과 할인 도메인 개발
+**개발내용**
+- DiscountPolicy(할인정책) : 할인적용(회원정보, 상품가격)
+- FixDiscountPolicy(할인정책의 구현체 - 정액할인) : 회원이 VIP등급이라면 1000원 할인. 그렇지 않다면 0원 할인.
+- Order(주문객체)
+- OrderService(주문서비스) : 주문생성(회원id, 상품명, 상품가격)
+- OrderServiceImpl(주문서비스구현체)
+    - 1.주문하는 회원정보를 조회하여 해당 회원의 등급 알아내기 : 회원조회
+    - 2.회원등급에 따른 할인가격 알아내기 : 할인적용
+
 # 8. 주문과 할인 도메인 실행과 테스트
+**주문과 할인정책 실행하기**
+```java
+public class OrderApp {
+    public static void main(String[] args){
+        MemberService memberService = new MemberServiceImpl();
+        OrderService orderService = new OrderServiceImpl();
 
+        // 등급이 VIP인 회원생성
+        Long memberId = 1L;
+        Member member = new Member(memberId, "memberA", Grade.VIP);
+        memberService.join(member);
 
+        // 해당회원으로 주문 생성
+        Order order = orderService.createOrder(memberId, "itemA", 10000);
+
+        System.out.println("order = " + order);
+    }
+}
+```
+- 결과
+    - order = Order{memberId=1, itemName='itemA', itemPrice=10000, discountPrice=1000}
+    - 회원이 VIP등급이고, 할인정책은 정액제를 선택했으니 discountPrice는 1000원이 맞다.
+    - 결과는 정상적으로 출력되었으나, 애플리케이션 로직으로 테스트를 수행하는 것은 좋은 방법이 아니다. JUnit테스트를 이용하자.
+
+**주문과 할인정책 테스트**
+```java
+class OrderServiceTest {
+    MemberService memberService = new MemberServiceImpl();
+    OrderService orderService = new OrderServiceImpl();
+
+    @Test
+    void createOrder() {
+        // 등급이 VIP인 회원생성
+        Long memberId = 1L;
+        Member member = new Member(memberId, "memberA", Grade.VIP);
+        memberService.join(member);
+
+        // 해당 회원으로 주문 생성하기
+        Order order = orderService.createOrder(memberId, "itemA", 10000);
+
+        // 검증하기
+        Assertions.assertThat(order.getDiscountPrice()).isEqualTo(1000);
+    }
+}
+```

@@ -80,13 +80,13 @@
 - 소프트웨어 요소는 <U>**확장에는 열려**</U> 있으나 <U>**변경에는 닫혀**</U> 있어야 한다.
 - 다형성을 활용하기
 - 인터페이스를 구현한 새로운 클래스를 하나 만들어서 새로운 기능을 구현
-```
+```java
 public class MemberService {
     private MemberRepository memberRepository = new MemoryMemberRepository();
 }
 ```
 
-```
+```java
 public class MemberService {
 //  private MemberRepository memberRepository = new MemoryMemberRepository();    
     private MemberRepository memberRepository = new JdbcMemberRepository();
@@ -115,13 +115,13 @@ public class MemberService {
 > Dependency Inversion Principle, 의존관계 역전 원칙
 - 구체화가 아닌 추상화에 의존하기
 - 구현 클래스가 아니라 인터페이스(역할)에 의존하기
-```
+```java
 public class MemberService {
     private MemberRepository memberRepository = new MemoryMemberRepository();
 }
 ```
 
-```
+```java
 public class MemberService {
 //  private MemberRepository memberRepository = new MemoryMemberRepository();    
     private MemberRepository memberRepository = new JdbcMemberRepository();

@@ -29,7 +29,7 @@
     - 하지만 실제 스프링의 라이프사이클은 빈 생성과 의존관계 주입 단계가 나뉘어져 있으므로, 이후 강의를 통해 자동의존관계 주입을 배우면서 왜 단계가 나뉘어져야 하는지 배울 것임 !
 
 # 2. 컨테이너에 등록된 모든 빈 조회
-```
+```java
 public class ApplicationContextInfoTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -74,7 +74,7 @@ public class ApplicationContextInfoTest {
 
 # 3. 스프링 빈 조회 : 기본
 ## (1) 빈 이름으로 조회하기
-```
+```java
 public class ApplicationContextBasicFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -95,7 +95,7 @@ public class ApplicationContextBasicFindTest {
 - 현재 getBean()내에 반환타입 파라미터 값은 MemberService.class 로, 인터페이스이다. <U>**인터페이스를 반환타입으로 적게 되면, 테스트 실행시 해당 인터페이스의 구현체를 대상으로 조회한다.**</U>
 
 ## (2) 이름 없이 타입으로만 조회
-```
+```java
 public class ApplicationContextBasicFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -118,7 +118,7 @@ public class ApplicationContextBasicFindTest {
 ## (3) 구체적인 타입으로 조회
 - 현재까지 getBean() 파라미터에 반환타입을 MemberService.class 인터페이스로 작성했다.
 - 이전에 타입으로만 빈 조회가 가능한 것을 배웠으니, MemberService의 구현체인 MemberServiceImpl을 이용하여 빈 조회를 해본다.
-```
+```java
 public class ApplicationContextBasicFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -142,7 +142,7 @@ public class ApplicationContextBasicFindTest {
 
 ## (4) 실패 테스트, 없는 빈이름으로 조회하기
 - 우선, 존재하지 않는 빈을 조회하면 어떻게 될까?
-```
+```java
 public class ApplicationContextBasicFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -156,7 +156,7 @@ public class ApplicationContextBasicFindTest {
 
 - 그럼 테스트가 실패하지 않도록 테스트 로직으로 검증하는 법을 알아보자
 - 이 테스트에선 예외가 터져야 테스트 성공, 그렇지 않으면 테스트 실패!
-```
+```java
 public class ApplicationContextBasicFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -172,7 +172,7 @@ public class ApplicationContextBasicFindTest {
 - 우선 현재 AppConfig에는 중복되는 동일한 타입의 메서드가 없으므로, 테스트를 위한 임시클래스 하나를 생성한다.
     - 임시클래스 생성후 AnnotationConfigApplicationContext를 생성할때, 임시로 생성한 클래스명을 파라미터 정보로 입력해줘야 한다.
     - <U>**class 안에 class를 쓸 경우에는 static키워드로 해당 클래스에서만 사용할 클래스임을 명시하기!**</U>
-```
+```java
 public class ApplicationContextSameBeanFindTest {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
 
@@ -192,7 +192,7 @@ public class ApplicationContextSameBeanFindTest {
 ```
 
 ## (1) 타입으로 조회 시 같은 타입이 둘 이상 있으면, 중복오류 발생
-```
+```java
 public class ApplicationContextSameBeanFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
@@ -208,7 +208,7 @@ public class ApplicationContextSameBeanFindTest {
 > org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'hello.core.member.MemberRepository' available: expected single matching bean but found 2: memberRepository1,memberRepository2
 - 코드수정
     - 검증할 내용 : ac.getBean(MemberRepository.class) 을 조회하면, NoUniqueBeanDefinitionException 이 발생할 것이다. 
-```
+```java
 public class ApplicationContextSameBeanFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
@@ -223,7 +223,7 @@ public class ApplicationContextSameBeanFindTest {
 ```
 
 ## (2) 타입으로 조회 시 같은 타입이 둘 이상 있으면, 빈 이름을 지정하면 된다.
-```
+```java
 public class ApplicationContextSameBeanFindTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
@@ -240,7 +240,7 @@ public class ApplicationContextSameBeanFindTest {
 
 ## (3) 특정 타입의 모든 빈을 조회하기
 - ac.getBeansOfType()을 사용하면 해당 타입의 모든 빈을 조회할 수 있다.
-```
+```java
 public class ApplicationContextSameBeanFindTest {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SameBeanConfig.class);
 
@@ -262,7 +262,7 @@ public class ApplicationContextSameBeanFindTest {
 - 그래서 모든 자바 객체의 최고 부모인 Object타입으로 조회하면, 모든 스프링 빈을 조회한다.
 <img src="./image/sec04_5.png">
 
-    ```
+    ```java
     public class ApplicationContextExtendsFindTest {
 
         AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
@@ -376,7 +376,7 @@ public class ApplicationContextSameBeanFindTest {
 
 ## XML 설정사용
 > src/main/resources/appConfig.xml
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -397,7 +397,7 @@ public class ApplicationContextSameBeanFindTest {
 </beans>
 ```
 > AppConfig와 비교하면 동일한 내용임을 알 수 있음
-```
+```java
 @Configuration
 public class AppConfig {
 
@@ -421,7 +421,7 @@ public class AppConfig {
 ```
 
 ## 테스트
-```
+```java
 public class XmlAppContext {
 
     @Test
@@ -459,7 +459,7 @@ public class XmlAppContext {
 - 새로운 형식의 설정 정보가 추가되면, XxxBeanDefinitionReader를 만들어서 BeanDefinition을 생성하면 된다.
 
 ## BeanDefinition 살펴보기
-```
+```java
 public class BeanDefinitionTest {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);

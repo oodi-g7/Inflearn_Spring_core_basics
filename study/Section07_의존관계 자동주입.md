@@ -1,7 +1,7 @@
 # 1. 다양한 의존관계 주입 방법
 ## (1) 생성자 주입
 - 생성자를 통해 의존관계를 주입받음
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService {
 
@@ -21,7 +21,7 @@ public class OrderServiceImpl implements OrderService {
     - <U>**불변, 필수**</U> 의존관계에 사용
         - **불변** : 생성자를 딱 1번만 호출하기 때문에 값이 변하지 않음
         - **필수** : 생성자에서 사용하는 필드 2개는 final이 붙어 있음. 즉, memberRepository와 discountPolicy는 무조건 값이 들어가 있어야한다는 의미. 현재는 생성자 호출 시 해당 필드에 값이 채워지므로 final 필드 조건에 부합하지만, 만약 그렇지 않다면 에러 발생.
-            ```
+            ```java
             // 에러나는 코드예시
             private final MemberRepository memberRepository;
             private final DiscountPolicy discountPolciy; // final필드인데 값이 없어서 에러나있음
@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 : 제약을 걸어 두는 것, 한계점이 명확하도록 코드를 짜는 것이 좋은 습관이다. 제약 없이 다 열어두면 어디서 수정되었는지, 내가 작성한 코드를 스스로 컨트롤할 수 없게됨.
 
 ## (2) 수정자 주입
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService {
 
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
     - @Autowired의 기본 동작은 주입할 대상이 없으면 오류가 발생한다. 주입할 대상이 없어도 동작하게 하려면 @Autowired(required=false)로 지정하면 된다.
 
 ## (3) 필드 주입
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService {
 
@@ -102,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
 - **자동 주입대상을 옵션으로 처리하는 방법** (컨테이너에 빈이 등록안되어있어도 문제없이 작동시키는 방법)
     - @Autowired(required=false)
         - 자동 주입할 대상이 없으면 수정자 메서드 자체가 호출 안됨
-        ```
+        ```java
         public class AutowiredTest {
 
             @Test
@@ -124,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
         - @Autowired(requried = false) 를 해뒀을 경우, 의존관계가 없으면 setNoBean1() 메소드 자체가 아예 호출되지 않음. 따라서 콘솔에 아무것도 안 찍혀 있음.
     - org.springframwork.lang.@Nullable
         - 자동 주입할 대상이 없으면 null이 입력됨
-        ```
+        ```java
         public class AutowiredTest {
 
             @Test
@@ -145,7 +145,7 @@ public class OrderServiceImpl implements OrderService {
     - Optional<>
         - Optional : null일 수도 있고, 아닐수도 있다 라는 상태를 감싼 것.(Java 8)
         - 자동 주입할 대상이 없으면 Optional.empty 가 입력됨
-        ```
+        ```java
         public class AutowiredTest {
 
             @Test
@@ -180,7 +180,7 @@ public class OrderServiceImpl implements OrderService {
 ## 생성자 주입을 선택해야 하는 이유 2 : 누락
 - 프레임워크 없이 순수한 자바 코드를 단위 테스트 할때
     - 수정자 의존관계의 경우
-        ```
+        ```java
         public class OrderServiceImpl implements OrderService {
 
             private MemberRepository memberRepository;
@@ -199,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
         ```
     - 만약 의존관계가 없을때(스프링 컨테이너에 MemberRepository 또는 DiscountPolicy가 존재하지 않을때) @Autowired가 프레임워크 안에서 동작하는 경우 오류가 발생하지만, 프레임워크없이 순수한 자바 코드로만 단위 테스트를 수행할때는 오류가 발생하지 않는다.
         - 스프링 프레임워크없이 테스트를 수행하므로, 스프링 컨테이너 내 등록된 빈을 참조하지 않기때문에 의존관계가 없는데도 오류가 발생하지 않는 것 !
-        ```
+        ```java
         @Test
         void createOrder(){
             OrderServiceImpl orderService = new OrderServiceImpl();
@@ -236,7 +236,7 @@ public class OrderServiceImpl implements OrderService {
 
 ## 기본 코드 리팩토링
 **기본코드**
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService{
 
@@ -252,7 +252,7 @@ public class OrderServiceImpl implements OrderService{
 ```
 - 생성자가 단 1개일 경우, @Autowired를 생략가능하다.
 
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService{
 
@@ -272,7 +272,7 @@ public class OrderServiceImpl implements OrderService{
         <img src="./image/sec07_3.png">
 
 **최종 리팩토링 코드**
-```
+```java
 @Component
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService{
@@ -292,12 +292,12 @@ public class OrderServiceImpl implements OrderService{
 
 # 5. 조회 빈이 2개 이상 - 문제
 - @Autowired는 타입(Type)으로 조회한다.
-    ```
+    ```java
     @Autowired
     private DiscountPolicy discountPolicy
     ```
     - 그렇기에 위 코드는 아래 코드와 유사하게 동작한다. (실제로는 더 많은 기능을 제공함.)
-    ```
+    ```java
     ac.getBean(DiscountPolicy.class)
     ```
 - 타입으로 조회시, 선택된 빈이 2개 이상일때 문제가 발생한다.
@@ -319,14 +319,14 @@ public class OrderServiceImpl implements OrderService{
 ## @Autowired 필드 명 매칭
 1. @Autowired는 타입매칭을 시도한다.
 2. 이때 여러 빈이 있으면 <U>**필드 이름, 파라미터 이름**</U>으로 빈 이름을 추가 매칭한다.
-```
+```java
 // 기존코드
 @Autowired
 private DiscountPolicy discountPolicy;
 ```
 - DiscountPolicy 하위에는 RateDiscountPolicy와 FixDiscountPolicy 두 개가 존재.
 - 타입매칭을 시도할경우 두가지의 빈이 조회되므로, 코드를 아래처럼 바꾸면 필드명 매칭이 가능해진다.
-```
+```java
 // 필드명을 컨테이너에 등록된 빈 이름으로 변경
 @Autowired
 private DiscountPolicy rateDiscountPolicy;
@@ -340,18 +340,18 @@ private DiscountPolicy rateDiscountPolicy;
     - (2) @Qualifier("...") 을 못찾았을 경우, "..."이라는 빈 이름을 매칭한다.
     - (3) "..."이라는 빈 또한 찾지 못했을 경우, NoSuchBeanDefinitionException 예외가 발생한다.
 1. 빈 등록시 @Qualifier를 붙여준다.
-```
+```java
 @Component
 @Qualifier("mainDiscountPolicy")
 public class RateDiscountPolicy implements DiscountPolicy {}
 ```
-```
+```java
 @Component
 @Qualifier("fixDiscountPolicy")
 public class FixDiscountPolicy implements DiscountPolicy {}
 ```
 2.  주입시 @Qualifier를 붙여주고 등록한 이름을 적어준다.
-```
+```java
 // 예시 - 생성자 자동 주입시
 @Autowired
 public OrderServiceImpl(MemberRepository memberRepository, @Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy){
@@ -359,7 +359,7 @@ public OrderServiceImpl(MemberRepository memberRepository, @Qualifier("mainDisco
     this.discountPolicy = discountPolicy;
 }
 ```
-```
+```java
 // 예시 - 수정자 자동 주입시
 @Autowired
 public DiscountPolicy setDiscountPolicy(@Qualifier("mainDiscountPolicy") DiscountPolicy discountPolicy) {
@@ -370,7 +370,7 @@ public DiscountPolicy setDiscountPolicy(@Qualifier("mainDiscountPolicy") Discoun
     - @Qualifier로 등록한 이름인 mainDiscountPolicy라는 이름의 스프링 빈을 추가로 찾는다.
     - 하지만 @Qualifier는 @Qualifier를 찾는 용도로만 사용하는 것이 명확하고 좋음
 3. 기타 - 직접 빈 등록시에도 @Qualifier사용가능
-```
+```java
 @Bean
 @Qualifier("mainDiscountPolicy)
 public DiscountPolicy discountPolicy(){
@@ -381,7 +381,7 @@ public DiscountPolicy discountPolicy(){
 ## @Primary 사용
 - @Primary는 우선순위를 정하는 방법.
 - @Autowired 시 여러빈이 매칭되면 @Primary 어노테이션이 붙은 클래스가 우선권을 가진다.
-```
+```java
 // RateDiscountPolicy가 우선권을 가지도록 한다.
 @Component
 @Primary
@@ -390,7 +390,7 @@ public class RateDiscountPolicy implements DiscountPolicy {}
 @Component
 public class FixDiscountPolicy implements DiscountPolicy {}
 ```
-```
+```java
 // 생성자
 @Autowired
 public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy){
@@ -418,7 +418,7 @@ public DiscountPolicy setDiscountPolicy(DiscountPolicy discountPolicy){
 # 7. 애노테이션 직접 만들기
 - @Qualifier("mainDiscountPolicy") 이렇게 "mainDiscountPolicy" 문자를 적으면, 컴파일시 타입 체크가 안된다. 그래서 오탈자가 났을 경우에도 프로젝트를 실행하여 에러를 통해 확인이 가능하다.
 - 따라서 아래와 같은 어노테이션을 만들어 문제를 해결할 수 있다.
-```
+```java
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -432,7 +432,7 @@ public @interface MainDiscountPolicy {
     - @Retention(RetentionPolicy.RUNTIME)
     - @Inherited
     - @Documented
-```
+```java
 @Component
 @MainDiscountPolicy
 public class RateDiscountPolicy implements DiscountPolicy {}
@@ -440,7 +440,7 @@ public class RateDiscountPolicy implements DiscountPolicy {}
 - @Qualifier("mainDiscountPolicy") 와 같이 사용했을때는 컴파일시 오탈자등을 확인할 수 없었지만, 이를 어노테이션으로 만들면 컴파일시 타입 체크를 원활하게 할 수 있다.
 
 ## 사용법
-```
+```java
 // 생성자 자동 주입
 @Autowired
 public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy DiscountPolicy discountPolicy) {

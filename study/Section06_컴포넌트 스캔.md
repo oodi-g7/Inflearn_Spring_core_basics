@@ -5,7 +5,7 @@
 - 또한 의존관계도 자동으로 주입하는 **@Autowired** 기능도 제공한다.
 
 ## AutoAppConfig.java
-```
+```java
 @Configuration
 @ComponentScan(
     excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = Configuration.class)
@@ -27,7 +27,7 @@ public class AutoAppConfig {
 
 ## @Component
 - 컴포넌트 스캔의 대상이 되는 클래스에 @Component 어노테이션을 붙여준다.
-```
+```java
 // MemoryMemberRepository
 @Component
 public class MemoryMemberRepository implements MemberRepository { }
@@ -54,7 +54,7 @@ public class MemberServiceImpl implements MemberService {
 - @Autowired는 의존관계를 자동으로 주입해준다.
 
 ## @Autowired
-```
+```java
 @Component
 public class OrderServiceImpl implements OrderService {
 
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
     - MemberRepository, DiscountPolicy
 
 ## @ComponentScan, @Configuration, AutoAppConfig 정상작동 테스트 : AutoAppConfigTest.java
-```
+```java
 public class AutoAppConfigTest {
 
     @Test
@@ -100,14 +100,14 @@ public class AutoAppConfigTest {
 # 2. 탐색 위치와 기본 스캔 대상
 ## @ComponentScan 탐색 위치
 - 컴포넌트 스캔시, 모든 자바 클래스와 라이브러리를 전부 컴포넌트 스캔하면 시간이 오래 걸리므로 필요한 위치부터 탐색할 수 있도록 시작위치를 지정할 수 있다.
-```
+```java
 @ComponentScan(
     basePackages = "hello.core.member",
     basePackageClasses = "AutoAppConfig"
 )
 ```
 - basePackages : 탐색할 패키지의 시작 위치를 지정한다. 이 패키지를 포함한 하위 패키지를 모두 탐색한다.
-    ```
+    ```java
     // 다음과 같이 여러 시작 위치를 지정할 수도 있다.
     @ComponentScan(
         basePackages = "hello.core.member", "hello.core.order"
@@ -145,7 +145,7 @@ public class AutoAppConfigTest {
 - excludeFilters : 컴포넌트 스캔에서 제외할 대상을 지정
 ## 사용방법
 **1. 컴포넌트 스캔 대상에 추가할 애노테이션 생성**
-```
+```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -155,7 +155,7 @@ public @interface MyIncludeComponent { }
 - @Target, @Retention, @Documented 어노테이션 공부 필요 !!
 
 **2. 컴포넌트 스캔 대상에서 제외할 애노테이션 생성**
-```
+```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -164,12 +164,12 @@ public @interface MyExcludeComponent { }
 - @MyExcludeComponent 라는 어노테이션 생성 완료. 컴포넌트 스캔 대상에 제외할 인스턴스에 해당 어노테이션 사용하면 됨.
 
 **3. 테스트용 빈 생성**
-```
+```java
 // 컴포넌트 스캔 대상에 추가할 클래스
 @MyIncludeComponent
 public class BeanA { }
 ```
-```
+```java
 // 컴포넌트 스캔 대상에서 제외할 클래스
 @MyExcludeComponent
 public class BeanB{ }
@@ -177,7 +177,7 @@ public class BeanB{ }
 
 **4. 검증**
 - 검증 전에, AppConfig만들어주기
-```
+```java
 public class ComponentFilterAppConfigTest {
 
     @Configuration
@@ -195,7 +195,7 @@ public class ComponentFilterAppConfigTest {
 - 예상
     - MyIncludeComponent 어노테이션을 적용한 BeanA는 스프링 빈에 등록
     - MyExcludeComponent 어노테이션을 적용한 BeanB는 스프링 빈에 없음
-```
+```java
 public class ComponentFilterAppConfigTest {
     
     @Test
@@ -243,14 +243,14 @@ public class ComponentFilterAppConfigTest {
 - 수등으로 등록한 빈과 자동으로 등록한 빈 사이에서 빈 이름이 중복되어 충돌이 발생한다면 ?
     - 수동으로 등록된 빈이 우선권을 가져, 수동 빈이 자동 빈을 오버라이딩 해버린다.
     <img src="./image/sec06_7.png">
-        ```
+        ```java
         Overriding bean definition for bean 'memoryMemberRepository' with a different definition
         ```
 
 ## (3) 스프링 부트 에러
 - 최근 스프링 부트에서는 수동 빈 등록과 자동 빈 등록이 충돌나면 오버라이딩을 하는 것이 아닌, 오류가 발생하도록 기본값을 변경함.
     - 테스트 코드가 아니라 CoreApplication을 실행해보면 에러확인 가능
-        ```
+        ```java
         Consider renaming one of the beans or enabling overriding by setting
         spring.main.allow-bean-definition-overriding=true
         ```

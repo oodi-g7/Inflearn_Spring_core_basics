@@ -6,7 +6,7 @@
 ## 현재코드 문제점
 <img src="./image/sec05_1.png">
 
-```
+```java
 @Configuration 
 public class AppConfig {
 
@@ -33,7 +33,7 @@ public class AppConfig {
 - 이것이 주는 문제점은 우선 **요청이 올때마다 계속 새로운 객체를 만들어야 한다는 것.** 또한 웹 애플리케이션은 고객의 요청을 끊임없이 받아야 하는데 이대로라면 **JVM메모리에 객체가 계속해서 생성되어 많은 공간을 차지하게 된다는 것**이다.
 
 ## 테스트코드로 검증하기
-```
+```java
 public class SingletonTest {
     
     @Test
@@ -70,7 +70,7 @@ public class SingletonTest {
     - private 생성자를 사용해서 외부에서 임의로 new 키워드를 사용하지 못하도록 막아야 한다.
 
 ## 싱글톤 패턴 적용하기
-```
+```java
 public class SingletonService {
 
     // 자기자신을 내부에 private으로 가짐 + static이므로 클래스 레벨에 올라가기때문에 딱 하나만 존재하게됨.
@@ -102,7 +102,7 @@ public class SingletonService {
 - 3. 딱 1개의 객체 인스턴스만 존재해야 하므로, 생성자를 private으로 막아서 혹시라도 외부에서 new키워드로 객체 인스턴스가 생성되는 것을 막는다.
 
 ## 테스트코드로 검증하기
-```
+```java
 @Test
     @DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
     void singletoneServiceTest(){
@@ -114,7 +114,7 @@ public class SingletonService {
 - private으로 new키워드가 막힌것을 확인할 수 있음. → 컴파일오류발생
     - 가장 좋은 오류는 컴파일 오류! 컴파일 오류만으로 대부분의 오류가 다 잡히도록 설계하는 것이 잘 설계했다는 증거가 되기도 !
 
-```
+```java
 @Test
     @DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
     void singletoneServiceTest(){
@@ -165,7 +165,7 @@ public class SingletonService {
     - 컨테이너는 객체를 하나만 생성해서 관리함
     
     **1. 컨테이너 생성**
-    ```
+    ```java
     ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
     ```
     <img src="./image/sec04_1.png">
@@ -180,7 +180,7 @@ public class SingletonService {
     - DIP, OCP, 테스트, private 생성자로부터 자유롭게 싱글톤을 사용할 수 있다.
 
 ## 스프링 컨테이너를 사용하는 테스트 코드
-```
+```java
 public class SingletonTest {
     @Test
     @DisplayName("스프링 컨테이너와 싱글톤")
@@ -241,7 +241,7 @@ public class SingletonTest {
 - 싱글톤 방식 한정, 스프링 빈의 필드에 공유 값을 설정하면 정말 큰 장애가 발생할 수 있다
 
 ## 상태를 유지할 경우 발생하는 문제점 예시
-```
+```java
 public class StatefulService {
     
     private int price; // 상태를 유지하는 필드
@@ -257,7 +257,7 @@ public class StatefulService {
 }
 ```
 
-```
+```java
 class StatefulServiceTest {
 
     @Test
@@ -298,7 +298,7 @@ class StatefulServiceTest {
 ## 해결방법
 - 필드 대신에 자바에서 공유되지 않는 <U>**지역변수, 파라미터, ThreadLocal**</U>등을 사용해야 한다
 - 그 중 지역변수를 이용
-```
+```java
 public class StatefulService {
 
     public int order(String name, int price){
@@ -308,7 +308,7 @@ public class StatefulService {
 }
 ```
 - 우선 필드를 제거해주고, 주문 메소드가 실행될때 반환값으로 주문금액을 돌려준다.
-```
+```java
 @Test
 void statefulServiceSingleton(){
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
@@ -328,7 +328,7 @@ void statefulServiceSingleton(){
 
 # 5. @Configuration과 싱글톤
 ## 의문, AppConfig
-```
+```java
 @Configuration
 public class AppConfig {
 
@@ -361,7 +361,7 @@ public class AppConfig {
 
 ## 검증하기
 - 테스트를 위해 MemberRepository를 조회할 수 있는 기능 추가
-```
+```java
 public class MemberServiceImpl implements MemberService{
     
     private final MemberRepository memberRepository;
@@ -372,7 +372,7 @@ public class MemberServiceImpl implements MemberService{
 }
 ```
 
-```
+```java
 public class OrderServiceImpl implements OrderService{
 
     private final MemberRepository memberRepository;
@@ -385,7 +385,7 @@ public class OrderServiceImpl implements OrderService{
 
 
 - 테스트 코드 작성
-```
+```java
 public class ConfigurationSingletonTest {
 
     @Test
@@ -416,7 +416,7 @@ public class ConfigurationSingletonTest {
 ## 메소드 호출 검증
 - 혹시 메소드가 호출되지 않는건 아닌지 테스트
 - 호출 로그 남기기
-```
+```java
 @Configuration
 public class AppConfig {
     //실제호출
@@ -461,7 +461,7 @@ public class AppConfig {
 - 스프링 컨테이너는 싱글톤 레지스트리다. 따라서 스프링 빈이 싱글톤이 되도록 보장해준다.
 - 싱글톤으로 보장해주기 위해 스프링은 클래스의 바이트코드를 조작하는 라이브러리를 사용한다.
 ## @Configuration을 적용한 AppConfig
-```
+```java
     @Test
     void configurationDeep(){
         ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -482,7 +482,7 @@ public class AppConfig {
     <img src="./image/sec05_10.png">
     - AppConfig@CGLIB 이라는 임의의 다른 클래스가 바로 싱글톤이 보장되도록 해주고 있는 것!
     - AppConfig@CGLIB 예상코드
-    ```
+    ```java
     @Bean
     public MemberRepository memberRepository(){
         
@@ -496,7 +496,7 @@ public class AppConfig {
     ```
     - 이 덕분에 싱글톤이 보장되는 것!
     - 참고로 AppConfig@CGLIB은 AppConfig의 자식 타입이므로 AppConfig타입으로 조회가 가능하다. 그래서 아래와 같은 코드가 가능했던 것.
-    ```
+    ```java
     @Test
     void configurationDeep(){
         ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
@@ -508,7 +508,7 @@ public class AppConfig {
 
 ## @Configuration을 적용하지 않고, @Bean만 적용하면 어떻게 되나
 - @Configuration을 붙이면 바이트코드를 조작하는 CGLIB 기술을 사용해서 싱글톤을 보장하지만, 만약 @Bean만 적용하면 어떻게 되는가?
-```
+```java
 //@Configuration 삭제
 public class AppConfig{
 

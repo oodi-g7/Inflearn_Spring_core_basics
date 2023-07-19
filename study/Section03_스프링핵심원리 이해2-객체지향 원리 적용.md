@@ -1,6 +1,6 @@
 # 1. 새로운 할인 정책 개발
 ## 할인 정책을 추가하고 해당 정책에 대한 테스트 진행
-```
+```java
 class RateDiscountPolicyTest {
 
     RateDiscountPolicy discountPolicy = new RateDiscountPolicy();
@@ -39,7 +39,7 @@ class RateDiscountPolicyTest {
 # 2. 새로운 할인 정책 적용과 문제점
 ## 할인 정책을 애플리케이션에 적용하기
 
-```
+```java
 public class OrderServiceImpl implements OrderService{
     private final MemberRepository memberRepository = new MemoryMemberRepository();
 //    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService{
 ## AppConfig 등장
 - 애플리케이션의 전체 동작 방식을 구성하기 위해, 구현 객체를 생성하고, 연결하는 책임을 가지는 별도의 설정 클래스
 - 생성자 주입방식으로 구현 객체를 생성, 연결시켜 줌. → <U>**의존관계 주입**</U>
-```
+```java
 public class AppConfig {
     
     public MemberService memberService(){
@@ -94,7 +94,7 @@ public class AppConfig {
     - OrderServiceImpl → MemoryMemberRepository, FixDiscountPolicy
 
 ##  AppConfig의 등장으로 변경된 코드
-```
+```java
 public class MemberServiceImpl implements MemberService{
 
     //기존 - Impl에서 인터페이스(MemberRepository)와 구현체(MemoryMemberRepository) 모두 선택
@@ -129,7 +129,7 @@ public class MemberServiceImpl implements MemberService{
 - 클라이언트인 memberServiceImpl입장에서 보면 의존관계를 마치 외부에서 주입해주는 것 같다고 해서 DI(Dependency Injection) 의존관계 주입(의존성 주입)이라 한다.
 
 ## 테스트 코드 오류수정
-```
+```java
 public class MemberServiceTest {
 
     MemberService memberService;
@@ -142,7 +142,7 @@ public class MemberServiceTest {
 }
 ```
 
-```
+```java
 public class OrderServiceTest {
     MemberService memberService;
     OrderService orderService;
@@ -164,7 +164,7 @@ A. 질문글남겨두기!!!!
 
 # 4. AppConfig 리팩터링
 ## 리팩터링 전
-```
+```java
 public class AppConfig {
     public MemberService memberService(){
         return new MemberServiceImpl(new MemoryMemberRepository());
@@ -178,7 +178,7 @@ public class AppConfig {
 - 중복(new MemoryMemberRepository)이 있고, 역할에 따른 구현이 잘 안 보임.
 
 ## 리팩터링 후
-```
+```java
 public class AppConfig {
 
     public MemberService memberService(){
@@ -219,7 +219,7 @@ public class AppConfig {
     <img src="./image/sec03_8.png">
 
     - 코드변경
-        ```
+        ```java
         public class AppConfig {
             public DiscountPolicy discountPolicy(){
                 // return new FixDiscountPolicy();
@@ -285,7 +285,7 @@ public class AppConfig {
 
 # 9. 스프링으로 전환하기
 ## AppConfig 변경
-```
+```java
 @Configuration
 public class AppConfig {
 
@@ -312,7 +312,7 @@ public class AppConfig {
 
 ## MemberApp 변경
 ### 기존코드
-```
+```java
 public class MemberApp {
     public static void main(String[] args) {
         AppConfig appConfig = new AppConfig();
@@ -330,7 +330,7 @@ public class MemberApp {
 ```
 
 ### 변경된 코드
-```
+```java
 public class MemberApp {
     public static void main(String[] args) {
         ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
