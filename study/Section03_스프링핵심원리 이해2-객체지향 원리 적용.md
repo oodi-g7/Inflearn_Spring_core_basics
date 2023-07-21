@@ -49,7 +49,7 @@ public class OrderServiceImpl implements OrderService{
 ```
 
 - 문제점
-    - 할인 정책을 변경하려면 할인(Discount)의 클라이언트인 주문(OrderServiceImpl) 코드를 변경해야한다.
+    - 할인 정책을 변경하려면 <U>**할인(Discount)의 클라이언트**</U>인 주문(OrderServiceImpl) 코드를 변경해야한다.
     - 그 이유는 클라이언트 코드인 OrderServiceImpl는 추상(인터페이스)뿐만 아니라 동시에 구체(구현)클래스에도 의존을 하고 있기 때문 → DIP 위반
         - 추상(인터페이스)의존 : DiscountPolicy
         - 구체(구현)클래스 : FixDiscountPolicy, RateDiscountPolicy
