@@ -75,9 +75,11 @@ public class SingletonTest {
 public class SingletonService {
 
     // 자기자신을 내부에 private으로 가짐 + static이므로 클래스 레벨에 올라가기때문에 딱 하나만 존재하게됨.
+    // private으로 아무도 호출하지 못함
     private static final SingletonService instance = new SingletonService();
 
     // 사용방법
+    // 무조건 getInstance()함수를 사용해서 singletonService를 사용할 수 있음
     public static SingletonService getInstance(){
         return instance;
     }
@@ -95,12 +97,13 @@ public class SingletonService {
     // 1. 우선 애플리케이션이 실행되면서 SingletonService의 static영역에 new SingletonService()를 실행하여 해당 객체를 생성한 후 변수 instance에 참조를 걸어둠
     // 2. 즉 SingletonService 객체는 현재 static영역에 단 하나만 존재함.
     // 3. instance변수에 담긴 SingletonService객체에 대한 참조값을 사용할 수 있는 방법은 오롯이 getInstance() 이다.
-    // 4. 또한 SingletonService를 생성할 수 있는 방법은 전혀 없음. (이미 기본생성자가 있는데 그게 private이므로)
+    // 4. 그 외에 SingletonService를 생성할 수 있는 방법은 전혀 없음. (이미 기본생성자가 있는데 그게 private이니까)
 }
 ```
-- 1. static영역에 객체 instance를 미리 하나 생성해서 올려둔다.
-- 2. 이 객체 인스턴스가 필요하면 오직 getInstance()메서드를 통해서만 조회할 수 있다. 이 메서드를 호출하면 항상 같은 인스턴스를 반환한다.
-- 3. 딱 1개의 객체 인스턴스만 존재해야 하므로, 생성자를 private으로 막아서 혹시라도 외부에서 new키워드로 객체 인스턴스가 생성되는 것을 막는다.
+1. static영역에 객체 instance를 미리 하나 생성해서 올려둔다.
+    - 자기자신을 필드로 선언할때 관례상 instance라고 선언함.
+2. 이 객체 인스턴스가 필요하면 오직 getInstance()메서드를 통해서만 조회할 수 있다. 이 메서드를 호출하면 항상 같은 인스턴스를 반환한다.
+3. 딱 1개의 객체 인스턴스만 존재해야 하므로, 생성자를 private으로 막아서 혹시라도 외부에서 new키워드로 객체 인스턴스가 생성되는 것을 막는다.
 
 ## 테스트코드로 검증하기
 ```java
@@ -117,25 +120,25 @@ public class SingletonService {
 
 ```java
 @Test
-    @DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
-    void singletoneServiceTest(){
-        // new SingletonService(); -> 컴파일오류발생 : private access
+@DisplayName("싱글톤 패턴을 적용한 객체 사용해보기")
+void singletoneServiceTest(){
+    // new SingletonService(); -> 컴파일오류발생 : private access
 
-        // 호출할때마다 새로운 객체 생성?
-        SingletonService singletonService1 = SingletonService.getInstance();
-        SingletonService singletonService2 = SingletonService.getInstance();
+    // 호출할때마다 새로운 객체 생성?
+    SingletonService singletonService1 = SingletonService.getInstance();
+    SingletonService singletonService2 = SingletonService.getInstance();
 
-        // 참조값 확인
-        System.out.println("singletonService1 = " + singletonService1);
-        System.out.println("singletonService2 = " + singletonService2);
-        
-        // 싱글톤 패턴을 적용한 객체이므로, 자바가 뜰때 static으로 이미 생성해둔 객체를 가져다 쓰는 것임
-        // 그래서 호출할때마다 새로운 객체를 생성하는 것이 아니라, 이미 만들어둔 객체를 여기저기다 가져다 쓰는 것이므로 서로 동일한 객체임
+    // 참조값 확인
+    System.out.println("singletonService1 = " + singletonService1);
+    System.out.println("singletonService2 = " + singletonService2);
+    
+    // 싱글톤 패턴을 적용한 객체이므로, 자바가 뜰때 static으로 이미 생성해둔 객체를 가져다 쓰는 것임
+    // 그래서 호출할때마다 새로운 객체를 생성하는 것이 아니라, 이미 만들어둔 객체를 여기저기다 가져다 쓰는 것이므로 서로 동일한 객체임
 
-        // 검증
-        // same 와 equal 차이점 알기
-        assertThat(singletonService1).isSameAs(singletonService2);
-    }
+    // 검증
+    // same 와 equal 차이점 알기
+    assertThat(singletonService1).isSameAs(singletonService2);
+}
 ```
 <img src="./image/sec05_4.png">
 
