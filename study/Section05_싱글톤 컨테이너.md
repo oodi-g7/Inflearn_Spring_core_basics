@@ -179,9 +179,9 @@ void singletoneServiceTest(){
     - 이제 요청이 들어오면 컨테이너는 새로운 객체 인스턴스를 생성하는 것이 아니라, 이미 빈으로 등록되어 있는 객체들을 이용, 싱글톤으로 관리할 것이다.
     <img src="./image/sec04_2.png">
 - 스프링 컨테이너는 싱글톤 컨테이너 역할을 한다. 이렇게 싱글톤 객체를 생성하고 관리하는 기능을 싱글톤 레지스트리라고 한다.
-- 스프링 컨테이너의 이런 기능 덕분에 싱글턴 패턴의 모든 단점을 해결하면서 객체를 싱글톤으로 유지할 수 있다.
-    - 싱글톤 패턴을 위한 지저분한 코드가 들어가지 않아도 된다.
-    - DIP, OCP, 테스트, private 생성자로부터 자유롭게 싱글톤을 사용할 수 있다.
+- 스프링 컨테이너의 이런 기능 덕분에 싱글턴 패턴의 <U>**모든 단점을 해결**</U>하면서 객체를 싱글톤으로 유지할 수 있다.
+    1. 싱글톤 패턴을 위한 지저분한 코드가 들어가지 않아도 된다.
+    2. DIP, OCP, 테스트, private 생성자로부터 자유롭게 싱글톤을 사용할 수 있다.
 
 ## 스프링 컨테이너를 사용하는 테스트 코드
 ```java
@@ -296,39 +296,49 @@ class StatefulServiceTest {
     - 위 코드는 실제 쓰레드를 사용한 것이 아님(단순설명을 위한 간단한 예제코드)
 - A사용자의 주문금액은 10000원인데도 불구하고, 결과는 20000원이 출력된다.
     - 그 이유는 statefulService1과 statefulService2가 동일한 객체를 참조하고 있기 때문에, StatefulService의 price필드 값이 10000원에서 20000원으로 변경되었기 때문!
-    - 즉, StatefulService의 price필드는 공유되는 필드인데 특정 클라이언트가 값을 변경할 수 있으므로 문제가 발생!
+    - 즉, StatefulService의 price필드는 공유되는 필드인데, 특정 클라이언트가 값을 변경할 수 있으므로 문제가 발생!
 - 공유필드는 정말 조심해야 함..
 
 ## 해결방법
 - 필드 대신에 자바에서 공유되지 않는 <U>**지역변수, 파라미터, ThreadLocal**</U>등을 사용해야 한다
 - 그 중 지역변수를 이용
-```java
-public class StatefulService {
+    ```java
+    public class StatefulService {
 
-    public int order(String name, int price){
-        System.out.println("name = " + name + " price = " + price);
-        return price;
+    //  private int price;
+
+        public int order(String name, int price){
+            System.out.println("name = " + name + " price = " + price);
+            return price;
+        }
     }
-}
-```
-- 우선 필드를 제거해주고, 주문 메소드가 실행될때 반환값으로 주문금액을 돌려준다.
-```java
-@Test
-void statefulServiceSingleton(){
-    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
-    StatefulService statefulService1 = ac.getBean(StatefulService.class);
-    StatefulService statefulService2 = ac.getBean(StatefulService.class);
+    ```
+    - 우선 필드를 제거해주고, 주문 메소드가 실행될때 반환값으로 주문금액을 돌려준다.
+    ```java
+    @Test
+    void statefulServiceSingleton(){
+        AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+        StatefulService statefulService1 = ac.getBean(StatefulService.class);
+        StatefulService statefulService2 = ac.getBean(StatefulService.class);
 
-    //ThreadA : A사용자 10000원 주문
-    int userAPrice = statefulService1.order("userA", 10000);
-    //ThreadB : B사용자 20000원 주문
-    int userBPrice = statefulService2.order("userB", 20000);
+        //ThreadA : A사용자 10000원 주문
+        int userAPrice = statefulService1.order("userA", 10000);
+        //ThreadB : B사용자 20000원 주문
+        int userBPrice = statefulService2.order("userB", 20000);
 
-    //ThreadA : A사용자 주문 금액 조회
-    System.out.println("price = " + userAPrice);
-}
-```
-- 반환되는 주문금액을 각각 userAPrice, userBPrice라는 <U>**지역변수**</U>에 담아두면, 동일한 객체 인스턴스를 사용하지만 서로 공유되지 않는 지역변수를 이용하기 때문에 문제가 발생하지 않음
+        //ThreadA : A사용자 주문 금액 조회
+        System.out.println("price = " + userAPrice);
+    }
+    ```
+    - 반환되는 주문금액을 각각 userAPrice, userBPrice라는 <U>**지역변수**</U>에 담아두면, 동일한 객체 인스턴스를 사용하지만 서로 공유되지 않는 지역변수를 이용하기 때문에 문제가 발생하지 않음
+---
+### [참고] stateless 무상태설계
+- 클라이언트와 서버관계에서 서버가 클라이언트의 상태를 보존하지 않음을 의미
+- 이전 클라이언트의 요청(상태)를 유지하지 않는 것
+- [읽어보기](https://roxy.iro.ooo/infra/protocol/http/http-stateful-stateless)
+---
+
+## ※정리 <U>싱글톤객체(스프링빈)은 꼭 무상태로 설계하자 ! </U>
 
 # 5. @Configuration과 싱글톤
 ## 의문, AppConfig
